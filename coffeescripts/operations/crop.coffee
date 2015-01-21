@@ -27,6 +27,16 @@ class CropOperation extends Operation
         @options.ratio = 16 / 9
       when "free"
         @options.ratio = 0
+      when "facebook"
+        @options.ratio = 4 / 3
+      when "twitter"
+        @options.ratio = 2 / 1
+      when "linkedin"
+        @options.ratio = 18 / 11
+      when "instagram"
+        @options.ratio = 1 / 1
+      when "pinterest"
+        @options.ratio = 1 / 1
     return
 
   setSize: (size) ->

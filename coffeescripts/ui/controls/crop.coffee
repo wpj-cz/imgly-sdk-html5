@@ -55,6 +55,52 @@ class UIControlsCrop extends List
         tooltip: "16:9 crop"
         options:
           size: "16:9"
+      },
+      {
+        name: "Facebook"
+        cssClass: "facebook"
+        method: "setSize"
+        arguments: ["facebook"]
+        tooltip: "Facebook"
+        default: true
+        options:
+          size: "4:3"
+      },
+      {
+        name: "Twitter"
+        cssClass: "twitter"
+        method: "setSize"
+        arguments: ["twitter"]
+        tooltip: "Twitter"
+        options:
+          size: "2:1"
+      },
+      {
+        name: "LinkedIn"
+        cssClass: "linkedin"
+        method: "setSize"
+        arguments: ["linkedin"]
+        tooltip: "LinkedIn"
+        options:
+          size: "18:11"
+      },
+      {
+        name: "Instagram"
+        cssClass: "instagram"
+        method: "setSize"
+        arguments: ["instagram"]
+        tooltip: "Instagram"
+        options:
+          size: "1:1"
+      },
+      {
+        name: "Pinterest"
+        cssClass: "pinterest"
+        method: "setSize"
+        arguments: ["pinterest"]
+        tooltip: "Pinterest"
+        options:
+          size: "1:1"
       }
     ]
 
