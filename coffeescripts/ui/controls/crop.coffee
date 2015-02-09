@@ -62,7 +62,6 @@ class UIControlsCrop extends List
         method: "setSize"
         arguments: ["facebook"]
         tooltip: "Facebook"
-        default: true
         options:
           size: "4:3"
       },

@@ -5117,7 +5117,6 @@ UIControlsCrop = (function(_super) {
         method: "setSize",
         "arguments": ["facebook"],
         tooltip: "Facebook",
-        "default": true,
         options: {
           size: "4:3"
         }
