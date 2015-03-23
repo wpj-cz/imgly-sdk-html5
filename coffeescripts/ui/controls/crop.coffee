@@ -353,6 +353,7 @@ class UIControlsCrop extends List
 
       initialMousePosition  = new Vector2(e.clientX, e.clientY)
       initialStart          = new Vector2().copy(@operationOptions.start)
+      initialEnd            = @operationOptions.end.clone()
 
       ratio = @operationOptions.ratio
 
@@ -365,13 +366,21 @@ class UIControlsCrop extends List
         diffMousePosition = new Vector2(e.clientX, e.clientY)
           .subtract(initialMousePosition)
 
+        # Turn start and end into pixel values
+        endInPixels   = new Vector2().copy(initialEnd).multiplyWithRect(canvasRect)
+        startInPixels = new Vector2().copy(initialStart).multiplyWithRect(canvasRect)
+
         if @operationOptions.ratio is 0
           # Custom cropping, allow free scaling
-          @operationOptions.start
-            .copy(initialStart)
-            .multiplyWithRect(canvasRect)
-            .add(diffMousePosition)
-            .divideByRect(canvasRect)
+          @operationOptions.start.copy(startInPixels)
+
+          @operationOptions.start.y += diffMousePosition.y
+          @operationOptions.start.x += diffMousePosition.x
+
+          @operationOptions.start.clamp(
+            new Vector2(1, 1),
+            new Vector2(endInPixels.x - 50, endInPixels.y - 50)
+          ).divideByRect(canvasRect)
         else
           # Turn start and end into pixel values
           endInPixels   = new Vector2().copy(@operationOptions.end).multiplyWithRect(canvasRect)
