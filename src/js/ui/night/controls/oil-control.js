@@ -44,15 +44,12 @@ class OilControl extends Control {
    */
   _onEnter () {
     super._onEnter()
-    this._handleThicknessButton()
     this._setupCanvas()
     this._setupOperation()
     this._setupOptions()
 
     this._initialZoomLevel = this._ui.canvas.zoomLevel
     this._ui.canvas.zoomToFit()
-
-    this._setupCursor()
   }
 
   /**
@@ -60,7 +57,6 @@ class OilControl extends Control {
    */
   _setupOptions () {
     this._initialOptions = {
-      paths: this._operation.getPaths().slice(0)
     }
   }
 

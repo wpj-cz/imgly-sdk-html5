@@ -10,19 +10,15 @@
 
 import Operation from './operation'
 import Vector2 from '../lib/math/vector2'
-import Color from '../lib/color'
-
-const DEFAULT_THICKNESS = 0.02
-const DEFAULT_COLOR = new Color(1.0, 0.0, 0.0, 1.0)
 
 /**
  * An operation that can draw oiles on the canvas
  *
  * @class
- * @alias ImglyKit.Operations.OilsOperation
+ * @alias ImglyKit.Operations.OilOperation
  * @extends ImglyKit.Operation
  */
-class OilsOperation extends Operation {
+class OilOperation extends Operation {
   constructor (...args) {
     super(...args)
 
@@ -48,31 +44,12 @@ class OilsOperation extends Operation {
       precision mediump float;
       varying vec2 v_texCoord;
       uniform sampler2D u_image;
-      uniform sampler2D u_textImage;
-      uniform vec2 u_position;
-      uniform vec2 u_size;
 
       void main() {
-        vec4 color0 = texture2D(u_image, v_texCoord);
-        vec2 relative = (v_texCoord - u_position) / u_size;
-
-        if (relative.x >= 0.0 && relative.x <= 1.0 &&
-          relative.y >= 0.0 && relative.y <= 1.0) {
-
-            vec4 color1 = texture2D(u_textImage, relative);
-
-            // GL_SOURCE_ALPHA, GL_ONE_MINUS_SOURCE_ALPHA
-            gl_FragColor = color1 + color0 * (1.0 - color1.a);
-
-        } else {
-
-          gl_FragColor = color0;
-
-        }
+        vec4 color0 = vec4(1.0,1,0,0.5);
+        gl_FragColor = color0;
       }
     `
-
-    this._oilCanvas = document.createElement('canvas')
   }
 
   /**
@@ -82,45 +59,13 @@ class OilsOperation extends Operation {
    */
   /* istanbul ignore next */
   _renderWebGL (renderer) {
-    this.renderOilCanvas(renderer.getCanvas())
-    var gl = renderer.getContext()
+    console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
     this._setupProgram(renderer)
-    this._uploadCanvasToTexture(gl, this._oilCanvas)
-
-    // use the complete area available
-    var position = new Vector2(0, 0)
-    var size = new Vector2(1, 1)
-
     // Execute the shader
     renderer.runShader(null, this._fragmentShader, {
       uniforms: {
-        u_textImage: { type: 'i', value: this._textureIndex },
-        u_position: { type: '2f', value: [position.x, position.y] },
-        u_size: { type: '2f', value: [size.x, size.y] }
       }
     })
-  }
-
-  /**
-   * Uploads pixel-data contained in a canvas onto a texture
-   * @param  {Context} gl    gl-context (use renderer.getContext())
-   * @param  {Canvas} canvas A canvas that contains the pixel data for the texture
-   */
-  _uploadCanvasToTexture (gl, canvas) {
-    gl.activeTexture(gl.TEXTURE0 + this._textureIndex)
-    this._texture = gl.createTexture()
-    gl.bindTexture(gl.TEXTURE_2D, this._texture)
-
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-
-    // Set premultiplied alpha
-    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true)
-
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas)
-    gl.activeTexture(gl.TEXTURE0)
   }
 
   /**
@@ -143,46 +88,6 @@ class OilsOperation extends Operation {
    * @private
    */
   _renderCanvas (renderer) {
-    this.renderOilCanvas(renderer.getCanvas())
-    var context = renderer.getContext()
-    context.drawImage(this._oilCanvas, 0, 0)
-  }
-
-  /**
-   * Renders the oil canvas that will be used as a texture in WebGL
-   * and as an image in canvas
-   * @param {Canvas} canvas
-   * @private
-   */
-  renderOilCanvas (outputCanvas, canvas = this._oilCanvas) {
-    if (this._dirty) {
-      const context = canvas.getContext('2d')
-      context.clearRect(0, 0, canvas.width, canvas.height)
-    }
-
-    if (canvas.width !== outputCanvas.width ||
-        canvas.height !== outputCanvas.height) {
-      canvas.width = outputCanvas.width
-      canvas.height = outputCanvas.height
-    }
-
-    const paths = this._options.paths
-    for (let i = 0; i < paths.length; i++) {
-      const path = paths[i]
-      path.renderToCanvas(canvas)
-    }
-  }
-
-  /**
-   * Creates and adds a new path
-   * @param {Number} thickness
-   * @param {Color} color
-   * @return {OilsOperation.Path}
-   */
-  createPath (thickness, color) {
-    const path = new OilsOperation.Path(this, thickness, color)
-    this._options.paths.push(path)
-    return path
   }
 
   /**
@@ -195,33 +100,10 @@ class OilsOperation extends Operation {
   }
 
   /**
-   * returns the last color
-   * @return {Color}
-   */
-  getLastColor () {
-    const lastPath = this._options.paths[this._options.paths.length - 1]
-    if (!lastPath) return DEFAULT_COLOR
-    return lastPath.getColor()
-  }
-
-  /**
-   * returns the last thickness
-   * @return {Thickness}
-   */
-  getLastThickness () {
-    const lastPath = this._options.paths[this._options.paths.length - 1]
-    if (!lastPath) return DEFAULT_THICKNESS
-    return lastPath.getThickness()
-  }
-
-  /**
    * Gets called when this operation has been set to dirty
    * @private
    */
   _onDirty () {
-    this._options.paths.forEach((path) => {
-      path.setDirty()
-    })
   }
 }
 
@@ -230,101 +112,12 @@ class OilsOperation extends Operation {
  * operations.
  * @type {String}
  */
-OilsOperation.prototype.identifier = 'oil'
+OilOperation.prototype.identifier = 'oil'
 
 /**
  * Specifies the available options for this operation
  * @type {Object}
  */
-OilsOperation.prototype.availableOptions = {
-  paths: { type: 'array', default: [] }
-}
+OilOperation.prototype.availableOptions = {}
 
-/**
- * Represents a path that can be drawn on a canvas
- */
-OilsOperation.Path = class Path {
-  constructor (operation, thickness, color) {
-    this._thickness = thickness
-    this._color = color
-    this._controlPoints = []
-  }
-
-  renderToCanvas (canvas) {
-    if (this._controlPoints.length < 2) return
-
-    let lastControlPoint = this._controlPoints[0]
-    let controlPoint = lastControlPoint
-    for (let i = 1; i < this._controlPoints.length; i++) {
-      controlPoint = this._controlPoints[i]
-      controlPoint.renderToCanvas(canvas, lastControlPoint)
-      lastControlPoint = controlPoint
-    }
-  }
-
-  addControlPoint (position) {
-    const controlPoint = new OilsOperation.ControlPoint(this, position)
-    this._controlPoints.push(controlPoint)
-  }
-
-  getColor () {
-    return this._color
-  }
-
-  getThickness () {
-    return this._thickness
-  }
-
-  setDirty () {
-    this._controlPoints.forEach((point) => {
-      point.setDirty()
-    })
-  }
-}
-
-/**
- * Represents a control point of a path
- */
-OilsOperation.ControlPoint = class ControlPoint {
-  constructor (path, position) {
-    this._path = path
-    this._drawnCanvases = []
-    this._position = position
-  }
-
-  renderToCanvas (canvas, lastControlPoint) {
-    if (this._drawnCanvases.indexOf(canvas) !== -1) {
-      // This control point has already been drawn on this canvas. Ignore.
-      return
-    }
-
-    const context = canvas.getContext('2d')
-    const canvasSize = new Vector2(canvas.width, canvas.height)
-    const longerSide = Math.max(canvasSize.x, canvasSize.y)
-
-    const position = this._position.clone().multiply(canvasSize)
-    const lastPosition = lastControlPoint.getPosition()
-      .clone()
-      .multiply(canvasSize)
-
-    context.beginPath()
-    context.lineJoin = 'round'
-    context.strokeStyle = this._path.getColor().toHex()
-    context.lineWidth = this._path.getThickness() * longerSide
-    context.moveTo(lastPosition.x, lastPosition.y)
-    context.lineTo(position.x, position.y)
-    context.closePath()
-    context.stroke()
-    this._drawnCanvases.push(canvas)
-  }
-
-  getPosition () {
-    return this._position.clone()
-  }
-
-  setDirty () {
-    this._drawnCanvases = []
-  }
-}
-
-export default OilsOperation
+export default OilOperation
