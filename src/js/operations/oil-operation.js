@@ -6,6 +6,9 @@
 * http://creativecommons.org/licenses/by-nc/3.0/
 *
 * For commercial use, please contact us at contact@9elements.com
+*
+* Sourced from Kyprianidis, J. E., Kang, H., and Doellner, J. "
+* Anisotropic Kuwahara Filtering on the GPU," GPU Pro p.247 (2010).
 */
 
 import Operation from './operation'
