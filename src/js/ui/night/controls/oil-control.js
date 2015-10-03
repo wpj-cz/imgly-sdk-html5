@@ -10,8 +10,6 @@
  */
 
 import Control from './control'
-// import Vector2 from '../../../lib/math/vector2'
-// import Utils from '../../../lib/utils'
 import SimpleSlider from '../lib/simple-slider'
 import ColorPicker from '../lib/color-picker'
 
@@ -93,19 +91,12 @@ class OilControl extends Control {
    * @override
    */
   _onBack () {
-    if (!this._operationExistedBefore && !this._operation.getPaths().length) {
+    if (!this._operationExistedBefore) {
       this._ui.removeOperation('oil')
     } else {
       this._operation.dirty = true
     }
     this._ui.canvas.setZoomLevel(this._initialZoomLevel)
-  }
-
-  /**
-   * Resets the operation options to the initial options
-   */
-  _resetOperationSettings () {
-    this._operation.setPaths(this._initialOptions.paths)
   }
 
   /**
