@@ -41,54 +41,225 @@ class OilOperation extends Operation {
     * The fragment shader used for this operation
     */
     this._fragmentShader = `
-    precision mediump float;
-    varying vec2 v_texCoord;
-    uniform sampler2D u_image;
-    const float radius = 3.0;
+    varying highp vec2 v_texCoord;
+    uniform sampler2D inputImageTexture;
+
+    precision highp float;
+
     uniform vec2 src_size;
 
     void main (void)
     {
-      vec2 relative_src_size = vec2(1.0, 1.0) / src_size;
       vec2 uv = v_texCoord;
-      float n = float((radius + 1.0) * (radius + 1.0));
-      float i; float j;
+      float n = float(16); // radius is assumed to be 3
       vec3 m0 = vec3(0.0); vec3 m1 = vec3(0.0); vec3 m2 = vec3(0.0); vec3 m3 = vec3(0.0);
       vec3 s0 = vec3(0.0); vec3 s1 = vec3(0.0); vec3 s2 = vec3(0.0); vec3 s3 = vec3(0.0);
       vec3 c;
+      vec3 cSq;
 
-      for (float j = -radius; j <= 0.0; j += 1.0)  {
-        for (float i = -radius; i <= 0.0; i += 1.0)  {
-          c = texture2D(u_image, uv + vec2(i,j) * relative_src_size).rgb;
-          m0 += c;
-          s0 += c * c;
-        }
-      }
+      c = texture2D(inputImageTexture, uv + vec2(-3,-3) * src_size).rgb;
+      m0 += c;
+      s0 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(-3,-2) * src_size).rgb;
+      m0 += c;
+      s0 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(-3,-1) * src_size).rgb;
+      m0 += c;
+      s0 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(-3,0) * src_size).rgb;
+      cSq = c * c;
+      m0 += c;
+      s0 += cSq;
+      m1 += c;
+      s1 += cSq;
 
-      for (float j = -radius; j <= 0.0; j += 1.0)  {
-        for (float i = 0.0; i <= radius; i += 1.0)  {
-          c = texture2D(u_image, uv + vec2(i,j) * relative_src_size).rgb;
-          m1 += c;
-          s1 += c * c;
-        }
-      }
+      c = texture2D(inputImageTexture, uv + vec2(-2,-3) * src_size).rgb;
+      m0 += c;
+      s0 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(-2,-2) * src_size).rgb;
+      m0 += c;
+      s0 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(-2,-1) * src_size).rgb;
+      m0 += c;
+      s0 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(-2,0) * src_size).rgb;
+      cSq = c * c;
+      m0 += c;
+      s0 += cSq;
+      m1 += c;
+      s1 += cSq;
 
-      for (float j = 0.0; j <= radius; j += 1.0)  {
-        for (float i = 0.0; i <= radius; i += 1.0)  {
-          c = texture2D(u_image, uv + vec2(i,j) * relative_src_size).rgb;
-          m2 += c;
-          s2 += c * c;
-        }
-      }
+      c = texture2D(inputImageTexture, uv + vec2(-1,-3) * src_size).rgb;
+      m0 += c;
+      s0 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(-1,-2) * src_size).rgb;
+      m0 += c;
+      s0 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(-1,-1) * src_size).rgb;
+      m0 += c;
+      s0 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(-1,0) * src_size).rgb;
+      cSq = c * c;
+      m0 += c;
+      s0 += cSq;
+      m1 += c;
+      s1 += cSq;
 
-      for (float j = 0.0; j <= radius; j += 1.0)  {
-        for (float i = -radius; i <= 0.0; i += 1.0)  {
-          c = texture2D(u_image, uv + vec2(i,j) * relative_src_size).rgb;
-          m3 += c;
-          s3 += c * c;
-        }
-      }
+      c = texture2D(inputImageTexture, uv + vec2(0,-3) * src_size).rgb;
+      cSq = c * c;
+      m0 += c;
+      s0 += cSq;
+      m3 += c;
+      s3 += cSq;
+      c = texture2D(inputImageTexture, uv + vec2(0,-2) * src_size).rgb;
+      cSq = c * c;
+      m0 += c;
+      s0 += cSq;
+      m3 += c;
+      s3 += cSq;
+      c = texture2D(inputImageTexture, uv + vec2(0,-1) * src_size).rgb;
+      cSq = c * c;
+      m0 += c;
+      s0 += cSq;
+      m3 += c;
+      s3 += cSq;
+      c = texture2D(inputImageTexture, uv + vec2(0,0) * src_size).rgb;
+      cSq = c * c;
+      m0 += c;
+      s0 += cSq;
+      m1 += c;
+      s1 += cSq;
+      m2 += c;
+      s2 += cSq;
+      m3 += c;
+      s3 += cSq;
 
+      c = texture2D(inputImageTexture, uv + vec2(-3,3) * src_size).rgb;
+      m1 += c;
+      s1 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(-3,2) * src_size).rgb;
+      m1 += c;
+      s1 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(-3,1) * src_size).rgb;
+      m1 += c;
+      s1 += c * c;
+
+      c = texture2D(inputImageTexture, uv + vec2(-2,3) * src_size).rgb;
+      m1 += c;
+      s1 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(-2,2) * src_size).rgb;
+      m1 += c;
+      s1 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(-2,1) * src_size).rgb;
+      m1 += c;
+      s1 += c * c;
+
+      c = texture2D(inputImageTexture, uv + vec2(-1,3) * src_size).rgb;
+      m1 += c;
+      s1 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(-1,2) * src_size).rgb;
+      m1 += c;
+      s1 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(-1,1) * src_size).rgb;
+      m1 += c;
+      s1 += c * c;
+
+      c = texture2D(inputImageTexture, uv + vec2(0,3) * src_size).rgb;
+      cSq = c * c;
+      m1 += c;
+      s1 += cSq;
+      m2 += c;
+      s2 += cSq;
+      c = texture2D(inputImageTexture, uv + vec2(0,2) * src_size).rgb;
+      cSq = c * c;
+      m1 += c;
+      s1 += cSq;
+      m2 += c;
+      s2 += cSq;
+      c = texture2D(inputImageTexture, uv + vec2(0,1) * src_size).rgb;
+      cSq = c * c;
+      m1 += c;
+      s1 += cSq;
+      m2 += c;
+      s2 += cSq;
+
+      c = texture2D(inputImageTexture, uv + vec2(3,3) * src_size).rgb;
+      m2 += c;
+      s2 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(3,2) * src_size).rgb;
+      m2 += c;
+      s2 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(3,1) * src_size).rgb;
+      m2 += c;
+      s2 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(3,0) * src_size).rgb;
+      cSq = c * c;
+      m2 += c;
+      s2 += cSq;
+      m3 += c;
+      s3 += cSq;
+
+      c = texture2D(inputImageTexture, uv + vec2(2,3) * src_size).rgb;
+      m2 += c;
+      s2 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(2,2) * src_size).rgb;
+      m2 += c;
+      s2 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(2,1) * src_size).rgb;
+      m2 += c;
+      s2 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(2,0) * src_size).rgb;
+      cSq = c * c;
+      m2 += c;
+      s2 += cSq;
+      m3 += c;
+      s3 += cSq;
+
+      c = texture2D(inputImageTexture, uv + vec2(1,3) * src_size).rgb;
+      m2 += c;
+      s2 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(1,2) * src_size).rgb;
+      m2 += c;
+      s2 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(1,1) * src_size).rgb;
+      m2 += c;
+      s2 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(1,0) * src_size).rgb;
+      cSq = c * c;
+      m2 += c;
+      s2 += cSq;
+      m3 += c;
+      s3 += cSq;
+
+      c = texture2D(inputImageTexture, uv + vec2(3,-3) * src_size).rgb;
+      m3 += c;
+      s3 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(3,-2) * src_size).rgb;
+      m3 += c;
+      s3 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(3,-1) * src_size).rgb;
+      m3 += c;
+      s3 += c * c;
+
+      c = texture2D(inputImageTexture, uv + vec2(2,-3) * src_size).rgb;
+      m3 += c;
+      s3 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(2,-2) * src_size).rgb;
+      m3 += c;
+      s3 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(2,-1) * src_size).rgb;
+      m3 += c;
+      s3 += c * c;
+
+      c = texture2D(inputImageTexture, uv + vec2(1,-3) * src_size).rgb;
+      m3 += c;
+      s3 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(1,-2) * src_size).rgb;
+      m3 += c;
+      s3 += c * c;
+      c = texture2D(inputImageTexture, uv + vec2(1,-1) * src_size).rgb;
+      m3 += c;
+      s3 += c * c;
 
       float min_sigma2 = 1e+2;
       m0 /= n;
@@ -139,10 +310,9 @@ class OilOperation extends Operation {
     this._setupProgram(renderer)
     var canvas = renderer.getCanvas()
     console.log(canvas.width, canvas.height)
-    // Execute the shader
     renderer.runShader(null, this._fragmentShader, {
       uniforms: {
-        src_size: { type: '2f', value: [495.0, 330.0] }
+        src_size: { type: '2f', value: [ 1.0 / 495.0, 1.0 / 330.0 ] }
       }
     })
   }
@@ -195,9 +365,9 @@ class OilOperation extends Operation {
             l = y + j
             if ((k >= 0 && k < canvas.width) && (l >= 0 && l < canvas.height)) {
               index = (l * canvas.width + k) * 4
-              c.r = pixels[index]
-              c.g = pixels[index + 1]
-              c.b = pixels[index + 2]
+              c.r = pixels[index] / 255.0
+              c.g = pixels[index + 1] / 255.0
+              c.b = pixels[index + 2] / 255.0
               m0.add(c)
               s0.add(c.multiply(c))
             }
@@ -209,9 +379,9 @@ class OilOperation extends Operation {
             l = y + j
             if ((k >= 0 && k < canvas.width) && (l >= 0 && l < canvas.height)) {
               index = (l * canvas.width + k) * 4
-              c.r = pixels[index]
-              c.g = pixels[index + 1]
-              c.b = pixels[index + 2]
+              c.r = pixels[index] / 255.0
+              c.g = pixels[index + 1] / 255.0
+              c.b = pixels[index + 2] / 255.0
               m1.add(c)
               s1.add(c.multiply(c))
             }
@@ -223,9 +393,9 @@ class OilOperation extends Operation {
             l = y + j
             if ((k >= 0 && k < canvas.width) && (l >= 0 && l < canvas.height)) {
               index = (l * canvas.width + k) * 4
-              c.r = pixels[index]
-              c.g = pixels[index + 1]
-              c.b = pixels[index + 2]
+              c.r = pixels[index] / 255.0
+              c.g = pixels[index + 1] / 255.0
+              c.b = pixels[index + 2] / 255.0
               m2.add(c)
               s2.add(c.multiply(c))
             }
@@ -237,9 +407,9 @@ class OilOperation extends Operation {
             l = y + j
             if ((k >= 0 && k < canvas.width) && (l >= 0 && l < canvas.height)) {
               index = (l * canvas.width + k) * 4
-              c.r = pixels[index]
-              c.g = pixels[index + 1]
-              c.b = pixels[index + 2]
+              c.r = pixels[index] / 255.0
+              c.g = pixels[index + 1] / 255.0
+              c.b = pixels[index + 2] / 255.0
               m3.add(c)
               s3.add(c.multiply(c))
             }
@@ -254,9 +424,9 @@ class OilOperation extends Operation {
         var sigma2 = s0.r + s0.g + s0.b
         if (sigma2 < min_sigma2) {
           min_sigma2 = sigma2
-          pixels[index] = m0.r
-          pixels[index + 1] = m0.g
-          pixels[index + 2] = m0.b
+          pixels[index] = m0.r * 255.0
+          pixels[index + 1] = m0.g * 255.0
+          pixels[index + 2] = m0.b * 255.0
         }
         m1.divide(n)
         s1.r = Math.abs(s1.r / n - m1.r * m1.r)
@@ -265,9 +435,9 @@ class OilOperation extends Operation {
         sigma2 = s1.r + s1.g + s1.b
         if (sigma2 < min_sigma2) {
           min_sigma2 = sigma2
-          pixels[index] = m1.r
-          pixels[index + 1] = m1.g
-          pixels[index + 2] = m1.b
+          pixels[index] = m1.r * 255.0
+          pixels[index + 1] = m1.g * 255.0
+          pixels[index + 2] = m1.b * 255.0
         }
         m2.divide(n)
         s2.r = Math.abs(s2.r / n - m2.r * m2.r)
@@ -276,9 +446,9 @@ class OilOperation extends Operation {
         sigma2 = s2.r + s2.g + s2.b
         if (sigma2 < min_sigma2) {
           min_sigma2 = sigma2
-          pixels[index] = m2.r
-          pixels[index + 1] = m2.g
-          pixels[index + 2] = m2.b
+          pixels[index] = m2.r * 255.0
+          pixels[index + 1] = m2.g * 255.0
+          pixels[index + 2] = m2.b * 255.0
         }
         m3.divide(n)
         s3.r = Math.abs(s3.r / n - m3.r * m3.r)
@@ -287,14 +457,13 @@ class OilOperation extends Operation {
         sigma2 = s3.r + s3.g + s2.b
         if (sigma2 < min_sigma2) {
           min_sigma2 = sigma2
-          pixels[index] = m3.r
-          pixels[index + 1] = m3.g
-          pixels[index + 2] = m3.b
+          pixels[index] = m3.r * 255.0
+          pixels[index + 1] = m3.g * 255.0
+          pixels[index + 2] = m3.b * 255.0
         }
       }
     }
     context.putImageData(imageData, 0, 0)
-    console.log('done')
   }
 
   /**
