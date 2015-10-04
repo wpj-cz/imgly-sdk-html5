@@ -10,9 +10,7 @@ import Color from '../../lib/color'
 class OilFilter extends Filter {
     constructor (...args) {
       super(...args)
-
       this._glslPrograms = {}
-
       this._textureIndex = 1
       /**
       * The vertex shader used for this operation
@@ -292,12 +290,6 @@ class OilFilter extends Filter {
       `
     }
 
-  /**
-   * A unique string that identifies this operation. Can be used to select
-   * the active filter.
-   * @type {String}
-   */
-  static get identifier () { return 'oil' }
 
   /**
   * Crops this image using WebGL
@@ -464,19 +456,17 @@ class OilFilter extends Filter {
   }
 
   /**
+   * A unique string that identifies this operation. Can be used to select
+   * the active filter.
+   * @type {String}
+   */
+  static get identifier () { return 'oil' }
+
+  /**
    * The name that is displayed in the UI
    * @type {String}
    */
-  get name () {
-    return 'Oil'
-  }
-
-  /**
-  * Gets called when this operation has been set to dirty
-  * @private
-  */
-  _onDirty () {
-  }
+  get name () { return 'Oil' }
 }
 
 export default OilFilter
