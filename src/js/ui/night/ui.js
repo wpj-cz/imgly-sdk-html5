@@ -51,7 +51,7 @@ class NightUI extends UI {
       'stickers',
       'text',
       'brush',
-      'oil'
+      'art'
     ]
 
     this._paused = false
@@ -437,7 +437,7 @@ class NightUI extends UI {
     this.registerControl('stickers', 'stickers', require('./controls/stickers-control'))
     this.registerControl('text', 'text', require('./controls/text-control'))
     this.registerControl('brush', 'brush', require('./controls/brush-control'))
-    this.registerControl('oil', 'oil', require('./controls/oil-control'))
+    this.registerControl('art', 'art', require('./controls/art-control'))
   }
 
   /**

@@ -13,15 +13,15 @@ import Control from './control'
 import SimpleSlider from '../lib/simple-slider'
 import ColorPicker from '../lib/color-picker'
 
-class OilControl extends Control {
+class ArtControl extends Control {
   /**
    * Entry point for this control
    */
   init () {
-    let controlsTemplate = __DOTJS_TEMPLATE('../../../templates/night/operations/oil_controls.jst')
+    let controlsTemplate = __DOTJS_TEMPLATE('../../../templates/night/operations/art_controls.jst')
     this._controlsTemplate = controlsTemplate
 
-    let canvasControlsTemplate = __DOTJS_TEMPLATE('../../../templates/night/operations/oil_canvas.jst')
+    let canvasControlsTemplate = __DOTJS_TEMPLATE('../../../templates/night/operations/art_canvas.jst')
     this._canvasControlsTemplate = canvasControlsTemplate
 
     this._partialTemplates.slider = SimpleSlider.template
@@ -32,7 +32,7 @@ class OilControl extends Control {
    * Renders the controls
    */
   _renderControls () {
-    this._partialTemplates.colorPicker.additionalContext = { label: this._ui.translate('controls.oil.color') }
+    this._partialTemplates.colorPicker.additionalContext = { label: this._ui.translate('controls.art.color') }
     super._renderControls()
   }
 
@@ -73,8 +73,8 @@ class OilControl extends Control {
    * Sets up the operation
    */
   _setupOperation () {
-    this._operationExistedBefore = !!this._ui.operations.oil
-    this._operation = this._ui.getOrCreateOperation('oil')
+    this._operationExistedBefore = !!this._ui.operations.art
+    this._operation = this._ui.getOrCreateOperation('art')
   }
 
   /**
@@ -92,7 +92,7 @@ class OilControl extends Control {
    */
   _onBack () {
     if (!this._operationExistedBefore) {
-      this._ui.removeOperation('oil')
+      this._ui.removeOperation('art')
     } else {
       this._operation.dirty = true
     }
@@ -113,6 +113,6 @@ class OilControl extends Control {
  * A unique string that identifies this control.
  * @type {String}
  */
-OilControl.prototype.identifier = 'oil'
+ArtControl.prototype.identifier = 'art'
 
-export default OilControl
+export default ArtControl

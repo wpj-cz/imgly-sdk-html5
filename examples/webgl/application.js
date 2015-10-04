@@ -22,7 +22,7 @@ window.onload = function () {
       renderOnWindowResize: true // Our editor's size is relative to the window size
     })
 
-    kit.ui.selectOperations('brush, frames, oil')
+    kit.ui.selectOperations('brush, frames, art')
 
     kit.run()
 
