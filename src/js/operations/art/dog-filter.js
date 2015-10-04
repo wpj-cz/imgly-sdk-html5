@@ -32,14 +32,27 @@ class DogFilter extends Filter {
       varying highp vec2 v_texCoord;
       uniform sampler2D inputImageTexture;
 
+      uniform highp vec2 src_size;
+
       precision highp float;
 
       void main (void)
       {
         vec2 uv = v_texCoord;
-        vec3 color = texture2D(inputImageTexture, uv).rgb;
-        float u = ( -texture2D(inputImageTexture, uv + vec2(-1.0, 0.0)) + texture2D(inputImageTexture, uv + vec2(1.0, 0.0))) / 2.0;
-        float v = ( -texture2D(inputImageTexture, uv + vec2(0.0, -1.0)) + texture2D(inputImageTexture, uv + vec2(-1.0, 0.0))) / 2.0;
+        vec3 gray = vec3(0.299, 0.587, 0.114);
+        vec3 colorMid = texture2D(inputImageTexture, uv).rgb;
+        float grayMid = dot(colorMid, gray);
+        vec3 colorUp = texture2D(inputImageTexture, uv + vec2(0.0, -1.0) * src_size).rgb;
+        float grayUp = dot(colorUp, gray);
+        vec3 colorDown = texture2D(inputImageTexture, uv + vec2(0.0, 1.0) * src_size).rgb;
+        float grayDown = dot(colorDown, gray);
+        vec3 colorLeft = texture2D(inputImageTexture, uv + vec2(-1.0, 0.0) * src_size).rgb;
+        float grayLeft = dot(colorLeft, gray);
+        vec3 colorRight = texture2D(inputImageTexture, uv + vec2(1.0, 0.0) * src_size).rgb;
+        float grayRight = dot(colorRight, gray);
+
+        float u = ( -grayLeft + grayRight) / 2.0;
+        float v = ( -grayDown + grayUp) / 2.0;
         vec3 g = vec3(u * u, v * v, u * v);
         gl_FragColor = vec4(g.r, g.g, g.b, 1.0);
       }
@@ -53,8 +66,10 @@ class DogFilter extends Filter {
   */
   renderWebGL (renderer) {
     this._setupProgram(renderer)
+    var canvas = renderer.getCanvas()
     renderer.runShader(null, this._fragmentShader, {
       uniforms: {
+        src_size: { type: '2f', value: [ 1.0 / canvas.width, 1.0 / canvas.height ] }
       }
     })
   }

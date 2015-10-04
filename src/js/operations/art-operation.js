@@ -15,6 +15,7 @@ import Operation from './operation'
 import OilFilter from './art/oil-filter'
 import Rgb2XyzFilter from './art/rgb2xyz-filter'
 import Xyz2LabFilter from './art/xyz2lab-filter'
+import DogFilter from './art/dog-filter'
 
 /**
 * An operation that turns an image into some piece of art
@@ -29,6 +30,7 @@ class ArtOperation extends Operation {
     this._oilFilter = new OilFilter()
     this._rgb2xyzFilter = new Rgb2XyzFilter()
     this._xyz2labFilter = new Xyz2LabFilter()
+    this._dogFilter = new DogFilter()
   }
 
   /**
@@ -37,7 +39,7 @@ class ArtOperation extends Operation {
   * @private
   */
   _renderWebGL (renderer) {
-    this._xyz2labFilter.renderWebGL(renderer)
+    this._dogFilter.renderWebGL(renderer)
   }
 
   /**
