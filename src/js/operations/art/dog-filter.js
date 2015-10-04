@@ -6,7 +6,7 @@
 
 import Filter from '../filters/filter'
 
-class Rgb2XyzFilter extends Filter {
+class DogFilter extends Filter {
     constructor (...args) {
       super(...args)
       this._glslPrograms = {}
@@ -38,38 +38,10 @@ class Rgb2XyzFilter extends Filter {
       {
         vec2 uv = v_texCoord;
         vec3 color = texture2D(inputImageTexture, uv).rgb;
-        float var_R = color.x;
-        float var_G = color.y;
-        float var_B = color.z;
-
-        if ( var_R > 0.04045 ) {
-          var_R = pow((( var_R + 0.055 ) / 1.055 ), 2.4);
-        }
-        else {
-          var_R = var_R / 12.92;
-        }
-        if ( var_G > 0.04045 ) {
-          var_G = pow((( var_G + 0.055 ) / 1.055 ), 2.4);
-        }
-        else {
-          var_G = var_G / 12.92;
-        }
-        if ( var_B > 0.04045 ) {
-           var_B = pow((( var_B + 0.055 ) / 1.055 ), 2.4);
-        }
-        else {
-          var_B = var_B / 12.92;
-        }
-
-        var_R = var_R * 100.0;
-        var_G = var_G * 100.0;
-        var_B = var_B * 100.0;
-
-        //Observer. = 2°, Illuminant = D65
-        float X = (var_R * 0.4124 + var_G * 0.3576 + var_B * 0.1805) / 95.047;
-        float Y = (var_R * 0.2126 + var_G * 0.7152 + var_B * 0.0722) / 100.000;
-        float Z = (var_R * 0.0193 + var_G * 0.1192 + var_B * 0.9505) / 108.883;
-        gl_FragColor = vec4(X, Y, Z, 1.0);
+        float u = ( -texture2D(inputImageTexture, uv + vec2(-1.0, 0.0)) + texture2D(inputImageTexture, uv + vec2(1.0, 0.0))) / 2.0;
+        float v = ( -texture2D(inputImageTexture, uv + vec2(0.0, -1.0)) + texture2D(inputImageTexture, uv + vec2(-1.0, 0.0))) / 2.0;
+        vec3 g = vec3(u * u, v * v, u * v);
+        gl_FragColor = vec4(g.r, g.g, g.b, 1.0);
       }
       `
     }
@@ -119,13 +91,13 @@ class Rgb2XyzFilter extends Filter {
    * the active filter.
    * @type {String}
    */
-  static get identifier () { return 'rgb2xyz' }
+  static get identifier () { return 'dogFilter' }
 
   /**
    * The name that is displayed in the UI
    * @type {String}
    */
-  get name () { return 'Rgb2Xyz' }
+  get name () { return 'DogFilter' }
 }
 
-export default Rgb2XyzFilter
+export default DogFilter

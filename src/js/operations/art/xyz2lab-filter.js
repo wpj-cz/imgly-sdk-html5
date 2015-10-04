@@ -37,7 +37,7 @@ class Xyz2LabFilter extends Filter {
       void main (void)
       {
         vec2 uv = v_texCoord;
-        vec4 color = texture2D(inputImageTexture, uv).rgb;
+        vec3 color = texture2D(inputImageTexture, uv).rgb;
         float var_X = color.x;
         float var_Y = color.y;
         float var_Z = color.z;

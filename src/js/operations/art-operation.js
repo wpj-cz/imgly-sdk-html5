@@ -13,6 +13,8 @@
 
 import Operation from './operation'
 import OilFilter from './art/oil-filter'
+import Rgb2XyzFilter from './art/rgb2xyz-filter'
+import Xyz2LabFilter from './art/xyz2lab-filter'
 
 /**
 * An operation that turns an image into some piece of art
@@ -25,6 +27,8 @@ class ArtOperation extends Operation {
   constructor (...args) {
     super(...args)
     this._oilFilter = new OilFilter()
+    this._rgb2xyzFilter = new Rgb2XyzFilter()
+    this._xyz2labFilter = new Xyz2LabFilter()
   }
 
   /**
@@ -33,7 +37,7 @@ class ArtOperation extends Operation {
   * @private
   */
   _renderWebGL (renderer) {
-    this._oilFilter.renderWebGL(renderer)
+    this._xyz2labFilter.renderWebGL(renderer)
   }
 
   /**
@@ -42,7 +46,7 @@ class ArtOperation extends Operation {
   * @private
   */
   _renderCanvas (renderer) {
-    this._oilFilter.renderCanvas(renderer)
+    this._xyz2labFilter.renderCanvas(renderer)
   }
 
   /**
