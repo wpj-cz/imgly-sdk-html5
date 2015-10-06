@@ -14,7 +14,11 @@
 import Operation from './operation'
 import OilFilter from './art/oil-filter'
 import Rgb2XyzFilter from './art/rgb2xyz-filter'
+import Xyz2RgbFilter from './art/xyz2rgb-filter'
 import Xyz2LabFilter from './art/xyz2lab-filter'
+import Lab2XyzFilter from './art/lab2xyz-filter'
+import Rgb2LabFilter from './art/rgb2lab-filter'
+import Lab2RgbFilter from './art/lab2rgb-filter'
 import DogFilter from './art/dog-filter'
 
 /**
@@ -29,7 +33,11 @@ class ArtOperation extends Operation {
     super(...args)
     this._oilFilter = new OilFilter()
     this._rgb2xyzFilter = new Rgb2XyzFilter()
+    this._lab2xyzFilter = new Lab2XyzFilter()
     this._xyz2labFilter = new Xyz2LabFilter()
+    this._xyz2rgbFilter = new Xyz2RgbFilter()
+    this._rgb2labFilter = new Rgb2LabFilter()
+    this._lab2rgbFilter = new Lab2RgbFilter()
     this._dogFilter = new DogFilter()
   }
 
@@ -39,7 +47,9 @@ class ArtOperation extends Operation {
   * @private
   */
   _renderWebGL (renderer) {
-    this._dogFilter.renderWebGL(renderer)
+//    this._oilFilter.renderWebGL(renderer)
+      this._rgb2labFilter.renderWebGL(renderer)
+      this._lab2rgbFilter.renderWebGL(renderer)
   }
 
   /**
