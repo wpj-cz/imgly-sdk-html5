@@ -17,6 +17,7 @@ import Rgb2LabFilter from './art/rgb2lab-filter'
 import Lab2RgbFilter from './art/lab2rgb-filter'
 import DogFilter from './art/dog-filter'
 import SobelFilter from './art/sobel-filter'
+import GaussianFilter from './art/gaussian-filter'
 
 /**
 * An operation that turns an image into some piece of art
@@ -33,6 +34,7 @@ class ArtOperation extends Operation {
     this._lab2rgbFilter = new Lab2RgbFilter()
     this._dogFilter = new DogFilter()
     this._sobelFilter = new SobelFilter()
+    this._gaussianFilter = new GaussianFilter()
   }
 
   /**
@@ -41,7 +43,8 @@ class ArtOperation extends Operation {
   * @private
   */
   _renderWebGL (renderer) {
-    this._sobelFilter.renderWebGL(renderer)
+    this._gaussianFilter.renderWebGL(renderer)
+
   }
 
   /**
