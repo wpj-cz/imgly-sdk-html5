@@ -16,6 +16,7 @@ import OilFilter from './art/oil-filter'
 import Rgb2LabFilter from './art/rgb2lab-filter'
 import Lab2RgbFilter from './art/lab2rgb-filter'
 import DogFilter from './art/dog-filter'
+import SobelFilter from './art/sobel-filter'
 
 /**
 * An operation that turns an image into some piece of art
@@ -31,6 +32,7 @@ class ArtOperation extends Operation {
     this._rgb2labFilter = new Rgb2LabFilter()
     this._lab2rgbFilter = new Lab2RgbFilter()
     this._dogFilter = new DogFilter()
+    this._sobelFilter = new SobelFilter()
   }
 
   /**
@@ -39,8 +41,7 @@ class ArtOperation extends Operation {
   * @private
   */
   _renderWebGL (renderer) {
-    this._rgb2labFilter.renderWebGL(renderer)
-    this._lab2rgbFilter.renderWebGL(renderer)
+    this._sobelFilter.renderWebGL(renderer)
   }
 
   /**
@@ -49,7 +50,7 @@ class ArtOperation extends Operation {
   * @private
   */
   _renderCanvas (renderer) {
-    this._xyz2labFilter.renderCanvas(renderer)
+    this._sobelFilter.renderCanvas(renderer)
   }
 
   /**
