@@ -43,7 +43,7 @@ class ArtOperation extends Operation {
   * @private
   */
   _renderWebGL (renderer) {
-    this._gaussianFilter.renderWebGL(renderer)
+    this._sobelFilter.renderWebGL(renderer)
 
   }
 

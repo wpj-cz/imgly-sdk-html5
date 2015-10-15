@@ -63,11 +63,7 @@
         }
         `
       }
-      /*
-      float fy = ( c.x + 16.0f ) / 116.0f;
-        float fx = c.y / 500.0f + fy;
-        float fz = fy - c.z / 200.0f;
-      */
+
   /**
     * Crops this image using WebGL
     * @param  {WebGLRenderer} renderer
@@ -104,16 +100,17 @@
     * @private
     */
     renderCanvas (renderer) {
-      var threshold2 = 0
+      var threshold2 = 0.002
       var canvas = renderer.getCanvas()
       var context = renderer.getContext()
       var imageData = context.getImageData(0, 0, canvas.width, canvas.height)
-      var pixels = imageData.data.map((x, i) => {x / 255})
+      var pixels = imageData.data
+      var original = pixels.slice(0)
       var index = 0
       var u = [0, 0, 0]
       var v = [0, 0, 0]
-      for (var y = 1; y < canvas.height - 1; y++) {
-        for (var x = 1; x < canvas.width - 1; x++) {
+      for (var y = 1; y < canvas.height; y++) {
+        for (var x = 1; x < canvas.width; x++) {
           var ix = x
           var iy = y
           for (var c = 0; c < 3; c++) {
@@ -122,77 +119,92 @@
             ix = x - 1
             iy = y - 1
             index = (iy * canvas.width + ix) * 4 + c
-            u[c] += -0.183 * pixels[index]
+            u[c] += -0.183 * original[index]
 
             iy = y
             index = (iy * canvas.width + ix) * 4 + c
-            u[c] += -0.634 * pixels[index]
+            u[c] += -0.183 * original[index]
 
             iy = y + 1
             index = (iy * canvas.width + ix) * 4 + c
-            u[c] += -0.183 * pixels[index]
+            u[c] += -0.183 * original[index]
 
             ix = x + 1
             iy = y - 1
             index = (iy * canvas.width + ix) * 4 + c
-            u[c] += 0.183 * pixels[index]
+            u[c] += 0.183 * original[index]
 
             iy = y
             index = (iy * canvas.width + ix) * 4 + c
-            u[c] += 0.634 * pixels[index]
+            u[c] += 0.183 * original[index]
 
             iy = y + 1
             index = (iy * canvas.width + ix) * 4 + c
-            u[c] += 0.183 * pixels[index]
+            u[c] += 0.183 * original[index]
             u[c] *= 0.5
-
-            // calculate v
+        // calculate v
             v[c] = 0
-            ix = x - 1
             iy = y - 1
+            ix = x - 1
             index = (iy * canvas.width + ix) * 4 + c
-            v[c] += -0.183 * pixels[index]
+            v[c] += -0.183 * original[index]
 
             ix = x
             index = (iy * canvas.width + ix) * 4 + c
-            v[c] += -0.634 * pixels[index]
+            v[c] += -0.183 * original[index]
 
             ix = x + 1
             index = (iy * canvas.width + ix) * 4 + c
-            v[c] += -0.183 * pixels[index]
+            v[c] += -0.183 * original[index]
 
-            ix = x + 1
             iy = y + 1
+            ix = x - 1
             index = (iy * canvas.width + ix) * 4 + c
-            v[c] += 0.183 * pixels[index]
+            v[c] += 0.183 * original[index]
 
             ix = x
             index = (iy * canvas.width + ix) * 4 + c
-            v[c] += 0.634 * pixels[index]
+            v[c] += 0.183 * original[index]
 
             ix = x + 1
             index = (iy * canvas.width + ix) * 4 + c
-            v[c] += 0.183 * pixels[index]
+            v[c] += 0.183 * original[index]
             v[c] *= 0.5
+//            console.log(v[c])
           }
 
           var g = [0, 0, 0]
           // g.x = dot(u, u)
+
+          u[0] /= 255
+          u[1] /= 255
+          u[2] /= 255
+
+          v[0] /= 255
+          v[1] /= 255
+          v[2] /= 255
+
           g[0] = u[0] * u[0] + u[1] * u[1] + u[2] * u[2]
           g[1] = v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
           g[2] = u[0] * v[0] + u[1] * v[1] + u[2] * v[2]
 
           var mag = g[0] * g[0] + g[1] * g[1] + 2 * g[2] * g[2]
-          if (mag >= threshold2) {
-            index = (y * canvas.width + x) * 4
-            pixels[index] = g[0]
-            pixels[index + 1] = g[1]
-            pixels[index + 2] = g[2]
+
+          index = (y * canvas.width + x) * 4
+          if (mag > threshold2) {
+            pixels[index] = g[0] * 255
+            pixels[index + 1] = g[1] * 255
+            pixels[index + 2] = g[2] * 255
             pixels[index + 3] = mag
+          } else {
+            pixels[index] = original[index]
+            pixels[index + 1] = original[index + 1]
+            pixels[index + 2] = original[index + 2]
+            pixels[index + 3] = 255
           }
         }
       }
-      pixels = pixels.map((x, i) => {x * 255})
+      // pixels = pixels.map((x, i) => {x * 255})
       context.putImageData(imageData, 0, 0)
     }
 
