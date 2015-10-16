@@ -5,6 +5,9 @@
  */
 
 import Filter from '../filters/filter'
+import Vector2 from '../../lib/vector2'
+
+const CUDART_PIO2_F = 1.570796327
 
 class StGaussFilter extends Filter {
     constructor (...args) {
@@ -100,18 +103,121 @@ class StGaussFilter extends Filter {
     }
   }
 
+  _st2A (p) {
+    var index = (p.y * this._canvasWidth + p.x) * 4
+    var color = [this._original[index], this._original[index + 1], this._original[index + 2]]
+    color[0] /= 255
+    color[1] /= 255
+    color[2] /= 255
+    var a = 0.5 * (color[0] + color[1])
+    var b = 0.5 * Math.sqrt(Math.max(0.0, color[1] * color[1] - 2.0 * color[0] * color[1] + color[0] * color[0] + 4.0 * color[2] * color[2]))
+    var lambda1 = a + b
+    var lambda2 = a - b
+    return (lambda1 + lambda2 > 0) ? (lambda1 - lambda2) / (lambda1 + lambda2) : 0
+  }
+
+  _st_integrate_rk2 (p0, sigma, cos_max, step_size) {
+    this._stgauss2_filter(0, 0, p0)
+    var v0 = this._st2tangent(p0)
+    var sign = -1
+    do {
+      var v = new Vector2(v0.x * sign, v0.y * sign)
+      var p = new Vector2(p0.x + step_size * v.x, p0.y + step_size * v.y)
+      var u = step_size
+      while ((u < this._radius) &&
+             (p.x >= 0) && (p.x < this._canvasWidth) && (p.y >= 0) && (p.y < this._canvasHeight)) {
+        this._stgauss2_filter(sign, u, p)
+
+        var t = this._st2tangent(p)
+        var vt = this._dot(v, t)
+        if (vt < 0) {
+          t.x = -t.x
+          t.y = -t.y
+        }
+
+        t = this._st2tangent(new Vector2(p.x + 0.5 * step_size * t.x, p.y + 0.5 * step_size * t.y))
+        vt = this._dot(v, t)
+        if (Math.abs(vt) <= cos_max) {
+          break
+        }
+        if (vt < 0) {
+          t.x = -t.x
+          t.y = -t.y
+        }
+
+        v.x = t.x
+        v.y = t.y
+        p.x += step_size * t.x
+        p.y += step_size * t.y
+        u += step_size
+      }
+
+      sign *= -1
+    } while (sign > 0)
+  }
+
+  _st2tangent (p) {
+    var index = (p.y * this._canvasWidth + p.x) * 4
+    var color = [this._original[index], this._original[index + 1], this._original[index + 2]]
+    var phi = this._st2angle(color)
+    return new Vector2(Math.cos(phi), Math.sin(phi))
+  }
+
+  _st2angle (color) {
+    return 0.5 * Math.atan2(2 * color[2], color[0] - color[1]) + CUDART_PIO2_F
+  }
+
+  _stgauss2_filter (sigma) {
+    this._radius = 2 * sigma
+    this._twoSigma2 = 2 * sigma * sigma
+    this._c = [0, 0, 0, 0]
+    this._w = 0
+  }
+
+  _stgauss2_filter (sign, u, p) {
+    var k = Math.exp(-u * u / this._twoSigma2)
+    var index = (p.y * this._canvasWidth + p.x) * 4
+    var color = [this._original[index], this._original[index + 1], this._original[index + 2]]
+    this._c[0] += k * color[0]
+    this._c[1] += k * color[1]
+    this._c[2] += k * color[2]
+    this._w += k
+  }
+
   /**
   * Renders the oil operation to a canvas
   * @param  {CanvasRenderer} renderer
   * @private
   */
   renderCanvas (renderer) {
+    var sigma = 0.2
     var canvas = renderer.getCanvas()
     var context = renderer.getContext()
     var imageData = context.getImageData(0, 0, canvas.width, canvas.height)
-  //  var pixels = imageData.data
-
+    this._pixels = imageData.data
+    this._original = this._pixels.slice(0)
+    this._canvasWidth = canvas.width
+    this._canvasHeight = canvas.height
+    var step_size = 10
+    var max_angle = 2.0
+    for (var y = 1; y < canvas.height; y++) {
+      for (var x = 1; x < canvas.width; x++) {
+        var A = this._st2A(new Vector2(x, y))
+        sigma *= 0.25 * (1.0 + A) * (1.0 + A)
+        var cos_max = Math.cos(this._radians(max_angle))
+        this._stgauss2_filter(sigma)
+        this._st_integrate_rk2(sigma, cos_max, step_size)
+        var index = (y * this._canvasWidth + x) * 4
+        this._pixels[index] = this._c[0] / this._w
+        this._pixels[index + 1] = this._c[1] / this._w
+        this._pixels[index + 2] = this._c[2] / this._w
+      }
+    }
     context.putImageData(imageData, 0, 0)
+  }
+
+  _radians (angle) {
+    return angle / 180 * CUDART_PIO2_F
   }
 
   /**

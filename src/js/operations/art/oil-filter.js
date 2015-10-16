@@ -290,7 +290,6 @@ class OilFilter extends Filter {
       `
     }
 
-
   /**
   * Crops this image using WebGL
   * @param  {WebGLRenderer} renderer
