@@ -103,9 +103,9 @@ class StGaussFilter extends Filter {
     }
   }
 
-  _st2A (p) {
-    var index = (p.y * this._canvasWidth + p.x) * 4
-    var color = [this._original[index], this._original[index + 1], this._original[index + 2]]
+  _st2A (img, p) {
+    var index = (p.y * img.width + p.x) * 4
+    var color = [img.imageData[index], img.imageData[index + 1], img.imageData[index + 2]]
     color[0] /= 255
     color[1] /= 255
     color[2] /= 255
@@ -116,16 +116,16 @@ class StGaussFilter extends Filter {
     return (lambda1 + lambda2 > 0) ? (lambda1 - lambda2) / (lambda1 + lambda2) : 0
   }
 
-  _st_integrate_rk2 (p0, sigma, cos_max, step_size) {
-    this._stgauss2_filter(0, 0, p0)
-    var v0 = this._st2tangent(p0)
+  _st_integrate_rk2 (img, p0, sigma, cos_max, step_size) {
+    this._stgauss2_filter(img, 0, 0, p0)
+    var v0 = this._st2tangent(img, p0)
     var sign = -1
     do {
       var v = new Vector2(v0.x * sign, v0.y * sign)
       var p = new Vector2(p0.x + step_size * v.x, p0.y + step_size * v.y)
       var u = step_size
       while ((u < this._radius) &&
-             (p.x >= 0) && (p.x < this._canvasWidth) && (p.y >= 0) && (p.y < this._canvasHeight)) {
+             (p.x >= 0) && (p.x < img.width) && (p.y >= 0) && (p.y < img.height)) {
         this._stgauss2_filter(sign, u, p)
 
         var t = this._st2tangent(p)
@@ -156,9 +156,9 @@ class StGaussFilter extends Filter {
     } while (sign > 0)
   }
 
-  _st2tangent (p) {
-    var index = (p.y * this._canvasWidth + p.x) * 4
-    var color = [this._original[index], this._original[index + 1], this._original[index + 2]]
+  _st2tangent (img, p) {
+    var index = (p.y * img.width + p.x) * 4
+    var color = [img.imageData[index], img.imageData[index + 1], img.imageData[index + 2]]
     var phi = this._st2angle(color)
     return new Vector2(Math.cos(phi), Math.sin(phi))
   }
@@ -174,14 +174,30 @@ class StGaussFilter extends Filter {
     this._w = 0
   }
 
-  _stgauss2_filter (sign, u, p) {
+  _stgauss2_filter (img, sign, u, p) {
     var k = Math.exp(-u * u / this._twoSigma2)
-    var index = (p.y * this._canvasWidth + p.x) * 4
-    var color = [this._original[index], this._original[index + 1], this._original[index + 2]]
-    this._c[0] += k * color[0]
-    this._c[1] += k * color[1]
-    this._c[2] += k * color[2]
+    var index = (p.y * img.width + p.x) * 4
+    this._c[0] += k * img.imageData[index]
+    this._c[1] += k * img.imageData[index + 1]
+    this._c[2] += k * img.imageData[index + 2]
     this._w += k
+  }
+
+  _stgauss2_filter (dst, src, st, sigma, max_angle, adaptive = true, src_linear = true, st_linear = true, order, step_size) {
+    for (var y = 1; y < src.height; y++) {
+      for (var x = 1; x < src.width; x++) {
+        var A = this._st2A(st, new Vector2(x, y))
+        sigma *= 0.25 * (1.0 + A) * (1.0 + A)
+        var cos_max = Math.cos(this._radians(max_angle))
+        this._stgauss2_filter(src, sigma)
+        this._st_integrate_rk2(st, sigma, cos_max, step_size)
+        var index = (y * this._canvasWidth + x) * 4
+        this._pixels[index] = this._c[0] / this._w
+        this._pixels[index + 1] = this._c[1] / this._w
+        this._pixels[index + 2] = this._c[2] / this._w
+      }
+    }
+    this._context.putImageData(dst.imageData, 0, 0)
   }
 
   /**
@@ -190,30 +206,16 @@ class StGaussFilter extends Filter {
   * @private
   */
   renderCanvas (renderer) {
-    var sigma = 0.2
-    var canvas = renderer.getCanvas()
-    var context = renderer.getContext()
-    var imageData = context.getImageData(0, 0, canvas.width, canvas.height)
-    this._pixels = imageData.data
-    this._original = this._pixels.slice(0)
-    this._canvasWidth = canvas.width
-    this._canvasHeight = canvas.height
-    var step_size = 10
-    var max_angle = 2.0
-    for (var y = 1; y < canvas.height; y++) {
-      for (var x = 1; x < canvas.width; x++) {
-        var A = this._st2A(new Vector2(x, y))
-        sigma *= 0.25 * (1.0 + A) * (1.0 + A)
-        var cos_max = Math.cos(this._radians(max_angle))
-        this._stgauss2_filter(sigma)
-        this._st_integrate_rk2(sigma, cos_max, step_size)
-        var index = (y * this._canvasWidth + x) * 4
-        this._pixels[index] = this._c[0] / this._w
-        this._pixels[index + 1] = this._c[1] / this._w
-        this._pixels[index + 2] = this._c[2] / this._w
-      }
-    }
-    context.putImageData(imageData, 0, 0)
+    // var sigma = 0.2
+    // var canvas = renderer.getCanvas()
+    this._context = renderer.getContext()
+    // var imageData = context.getImageData(0, 0, canvas.width, canvas.height)
+    // this._pixels = imageData.data
+    // this._original = this._pixels.slice(0)
+    // this._canvasWidth = canvas.width
+    // this._canvasHeight = canvas.height
+    // var step_size = 10
+    // var max_angle = 2.0
   }
 
   _radians (angle) {
