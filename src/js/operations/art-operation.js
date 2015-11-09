@@ -44,7 +44,6 @@ class ArtOperation extends Operation {
   */
   _renderWebGL (renderer) {
     this._sobelFilter.renderWebGL(renderer)
-
   }
 
   /**
