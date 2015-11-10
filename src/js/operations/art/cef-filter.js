@@ -290,11 +290,53 @@ _gpu_cef_restrict (st) {
 }
 
 _gpu_cef_interpolate (st_fine, st_coarse) {
+  st_coarse = this._filterLinear(st_coarse)
   return st_fine
 }
 
 _gpu_cef_jacobi_step (st) {
   return st
+}
+
+_filterLinear (src) {
+  var dst = this._renderer.createCanvas() // TODO move canvas create, so we don't create it everytime
+  dst.width = this._canvasWidth
+  dst.height = this._canvasHeight
+  var dstContext = dst.getContext('2d')
+  var srcContext = src.getContext('2d')
+  var dstData = dstContext.getImageData(0, 0, dst.width, dst.height)
+  var srcData = srcContext.getImageData(0, 0, this._canvasWidth, this._canvasHeight)
+  var dstPixels = dstData.data
+  var srcPixels = srcData.data
+
+  var sum = [0, 0, 0, 0]
+  var index = 0
+  for (let y = 1; y < this._canvasHeight; y++) {
+    for (let x = 1; x < this._canvasWidth; x++) {
+      sum = [0, 0, 0, 0]
+      for (let u = -1; u <= 1; u++) {
+        for (let v = -1; v <= 1; v++) {
+          index = ((y + v) * this._canvasWidth + (x + u)) * 4
+          sum[0] += srcPixels[index]
+          sum[1] += srcPixels[index + 1]
+          sum[2] += srcPixels[index + 2]
+          sum[3] += srcPixels[index + 3]
+        }
+      }
+      sum[0] /= 9
+      sum[1] /= 9
+      sum[2] /= 9
+      sum[3] /= 9
+
+      index = (y * this._canvasWidth + x) * 4
+
+      dstPixels[index] = sum[0]
+      dstPixels[index + 1] = sum[1]
+      dstPixels[index + 2] = sum[2]
+      dstPixels[index + 3] = sum[3]
+    }
+  }
+  return dst
 }
 
 /*
