@@ -101,8 +101,6 @@ class CefFilter extends Filter {
 */
 renderCanvas (renderer) {
   var img = renderer.getCanvas()
-  this._canvasWidth = img.width
-  this._canvasHeight = img.height
   this._setStaticParameters()
   this._renderer = renderer
   var st = null
@@ -140,24 +138,24 @@ _gpu_cef_st (src, st_prev, sigma_d, tau_r, jacobi_steps) {
 // threshold = sigma_d
 _gpu_cef_merge (st_cur, st_prev) {
   var dst = this._renderer.createCanvas() // TODO move canvas create, so we don't create it everytime
-  dst.width = this._canvasWidth
-  dst.height = this._canvasHeight
+  dst.width = st_cur.width
+  dst.height = st_cur.height
   var dstContext = dst.getContext('2d')
-  var dstData = dstContext.getImageData(0, 0, this._canvasWidth, this._canvasHeight)
+  var dstData = dstContext.getImageData(0, 0, st_cur.width, st_cur.height)
   var dstPixels = dstData.data
 
   var curContext = st_cur.getContext('2d')
   var prevContext = st_prev.getContext('2d')
-  var curData = curContext.getImageData(0, 0, this._canvasWidth, this._canvasHeight)
-  var prevData = prevContext.getImageData(0, 0, this._canvasWidth, this._canvasHeight)
+  var curData = curContext.getImageData(0, 0, st_cur.width, st_cur.height)
+  var prevData = prevContext.getImageData(0, 0, st_cur.width, st_cur.height)
   var curPixels = curData.data
   var prevPixels = prevData.data
 
   var st = [0, 0, 0, 0]
   var index = 0
-  for (let y = 1; y < this._canvasHeight; y++) {
-    for (let x = 1; x < this._canvasWidth; x++) {
-      index = (y * this._canvasWidth + x) * 4
+  for (let y = 1; y < st_cur.height; y++) {
+    for (let x = 1; x < st_cur.width; x++) {
+      index = (y * st_cur.width + x) * 4
       st[0] = curPixels[index]
       st[1] = curPixels[index + 1]
       st[2] = curPixels[index + 2]
@@ -195,20 +193,20 @@ _gpu_cef_relax (st) {
 
 _gpu_cef_restrict (st) {
   var dst = this._renderer.createCanvas() // TODO move canvas create, so we don't create it everytime
-  dst.width = Math.round((this._canvasWidth + 1) / 2)
-  dst.height = Math.round((this._canvasHeight + 1) / 2)
+  dst.width = Math.round((st.width + 1) / 2)
+  dst.height = Math.round((st.height + 1) / 2)
   var dstContext = dst.getContext('2d')
   var stContext = st.getContext('2d')
   var dstData = dstContext.getImageData(0, 0, dst.width, dst.height)
-  var stData = stContext.getImageData(0, 0, this._canvasWidth, this._canvasHeight)
+  var stData = stContext.getImageData(0, 0, st.width, st.height)
   var dstPixels = dstData.data
   var stPixels = stData.data
 
   var index = 0
 
-  for (let y = 1; y < dst.height; y++) {
-    for (let x = 1; x < dst.width; x++) {
-      index = (2 * y + this._canvasWidth + 2 * x) * 4
+  for (let y = 1; y < st.height; y++) {
+    for (let x = 1; x < st.width; x++) {
+      index = (2 * y + st.width + 2 * x) * 4
       var sum = [0, 0, 0, 0]
       if (stPixels[index + 3] > 0) {
         sum[0] += stPixels[index]
@@ -217,7 +215,7 @@ _gpu_cef_restrict (st) {
         sum[3] += stPixels[index + 3]
       }
 
-      index = (2 * y + this._canvasWidth + 2 * x + 1) * 4
+      index = (2 * y + st.width + 2 * x + 1) * 4
       if (stPixels[index + 3] > 0) {
         sum[0] += stPixels[index]
         sum[1] += stPixels[index + 1]
@@ -225,7 +223,7 @@ _gpu_cef_restrict (st) {
         sum[3] += stPixels[index + 3]
       }
 
-      index = (2 * y + 1 + this._canvasWidth + 2 * x) * 4
+      index = (2 * y + 1 + st.width + 2 * x) * 4
       if (stPixels[index + 3] > 0) {
         sum[0] += stPixels[index]
         sum[1] += stPixels[index + 1]
@@ -233,7 +231,7 @@ _gpu_cef_restrict (st) {
         sum[3] += stPixels[index + 3]
       }
 
-      index = (2 * y + 1 + this._canvasWidth + 2 * x + 1) * 4
+      index = (2 * y + 1 + st.width + 2 * x + 1) * 4
       if (stPixels[index + 3] > 0) {
         sum[0] += stPixels[index]
         sum[1] += stPixels[index + 1]
@@ -248,7 +246,7 @@ _gpu_cef_restrict (st) {
         sum[3] /= sum[3]
       }
 
-      index = (y + this._canvasWidth + x) * 4
+      index = (y + st.width + x) * 4
       dstPixels[index] = sum[0]
       dstPixels[index + 1] = sum[1]
       dstPixels[index + 2] = sum[2]
@@ -260,7 +258,7 @@ _gpu_cef_restrict (st) {
 }
 
 _gpu_cef_interpolate (st_fine, st_coarse) {
-  st_coarse = this._filterLinear(st_coarse)
+  var st_coarse_filtred = this._filterLinear(st_coarse)
   var dst = this._renderer.createCanvas()
   dst.width = st_fine.width
   dst.height = st_fine.height
@@ -270,38 +268,92 @@ _gpu_cef_interpolate (st_fine, st_coarse) {
   var fineData = fineContext.getImageData(0, 0, dst.width, dst.height)
   var dstPixels = dstData.data
   var finePixels = fineData.data
-  var coarsePixels = st_coarse.getContext('2d').getImageData(0, 0, st_coarse.width, st_coarse.height)
+  var coarsePixels = st_coarse_filtred.getContext('2d').getImageData(0, 0, st_coarse.width, st_coarse.height)
 
   var tmp = [0, 0, 0, 0]
   var index = 0
   var halfIndex = 0
-  for (let y = 1; y < this._canvasHeight; y++) {
-    for (let x = 1; x < this._canvasWidth; x++) {
-      index = (y * this._canvasWidth + x) * 4
-      if (srcPixels[index + 3] < 255) {
-        halfIndex = ((y * 0.5) * this._canvasWidth + (x * 0.5) * 4
-        tmp[index] = coarsePixels[halfIndex]
-        tmp[index + 1] = coarsePixels[halfIndex + 1]
-        tmp[index + 2] = coarsePixels[halfIndex + 2]
-        tmp[index + 3] = 0
+  for (let y = 1; y < st_fine.height; y++) {
+    for (let x = 1; x < st_fine.width; x++) {
+      index = (y * st_fine.width + x) * 4
+      if (finePixels[index + 3] < 1) {
+        halfIndex = ((y * 0.5) * st_fine.width + (x * 0.5) * 4)
+        tmp[0] = coarsePixels[halfIndex]
+        tmp[1] = coarsePixels[halfIndex + 1]
+        tmp[2] = coarsePixels[halfIndex + 2]
+        tmp[3] = 0
       } else {
-        tmp[index] = srcPixels[index]
-        tmp[index + 1] = srcPixels[index + 1]
-        tmp[index + 2] = srcPixels[index + 2]
-        tmp[index + 3] = srcPixels[index + 3]
+        tmp[0] = finePixels[index]
+        tmp[1] = finePixels[index + 1]
+        tmp[2] = finePixels[index + 2]
+        tmp[3] = finePixels[index + 3]
       }
-      dstPixels[index] = tmp[index]
-      dstPixels[index + 1] = tmp[index + 1]
-      dstPixels[index + 2] = tmp[index + 2]
-      dstPixels[index + 3] = tmp[index + 3]
+      dstPixels[index] = tmp[0]
+      dstPixels[index + 1] = tmp[1]
+      dstPixels[index + 2] = tmp[2]
+      dstPixels[index + 3] = tmp[3]
     }
   }
   dstContext.putImageData(dstData, 0, 0)
   return dst
 }
 
-_gpu_cef_jacobi_step (st) {
-  return st
+_gpu_cef_jacobi_step (src) {
+  var dst = this._renderer.createCanvas()
+  dst.width = src.width
+  dst.height = src.height
+  var dstContext = dst.getContext('2d')
+  var srcContext = src.getContext('2d')
+  var dstData = dstContext.getImageData(0, 0, dst.width, dst.height)
+  var srcData = srcContext.getImageData(0, 0, src.width, src.width)
+  var dstPixels = dstData.data
+  var srcPixels = srcData.data
+
+  var tmp = [0, 0, 0, 0]
+  var index = 0
+  for (let y = 1; y < src.height; y++) {
+    for (let x = 1; x < src.width; x++) {
+      index = (y * src.width + x) * 4
+      if (srcPixels[index + 3] < 1) {
+        var tmpIndex = (y * src.width + (x + 1) * 4)
+        tmp[0] = srcPixels[tmpIndex]
+        tmp[1] = srcPixels[tmpIndex + 1]
+        tmp[2] = srcPixels[tmpIndex + 2]
+
+        tmpIndex = (y * src.width + (x - 1) * 4)
+        tmp[0] += srcPixels[tmpIndex]
+        tmp[1] += srcPixels[tmpIndex + 1]
+        tmp[2] += srcPixels[tmpIndex + 2]
+
+        tmpIndex = ((y + 1) * src.width + x * 4)
+        tmp[0] += srcPixels[tmpIndex]
+        tmp[1] += srcPixels[tmpIndex + 1]
+        tmp[2] += srcPixels[tmpIndex + 2]
+
+        tmpIndex = ((y - 1) * src.width + x * 4)
+        tmp[0] += srcPixels[tmpIndex]
+        tmp[1] += srcPixels[tmpIndex + 1]
+        tmp[2] += srcPixels[tmpIndex + 2]
+
+        tmp[0] /= 4
+        tmp[1] /= 4
+        tmp[2] /= 4
+        tmp[3] = 0
+      } else {
+        tmp[0] = srcPixels[index]
+        tmp[1] = srcPixels[index + 1]
+        tmp[2] = srcPixels[index + 2]
+        tmp[3] = srcPixels[index + 3]
+      }
+
+      dstPixels[index] = tmp[0]
+      dstPixels[index + 1] = tmp[1]
+      dstPixels[index + 2] = tmp[2]
+      dstPixels[index + 3] = tmp[3]
+    }
+  }
+  dstContext.putImageData(dstData, 0, 0)
+  return dst
 }
 
 _filterLinear (src) {
@@ -311,18 +363,18 @@ _filterLinear (src) {
   var dstContext = dst.getContext('2d')
   var srcContext = src.getContext('2d')
   var dstData = dstContext.getImageData(0, 0, dst.width, dst.height)
-  var srcData = srcContext.getImageData(0, 0, this._canvasWidth, this._canvasHeight)
+  var srcData = srcContext.getImageData(0, 0, src.width, dst.height)
   var dstPixels = dstData.data
   var srcPixels = srcData.data
 
   var sum = [0, 0, 0, 0]
   var index = 0
-  for (let y = 1; y < this._canvasHeight; y++) {
-    for (let x = 1; x < this._canvasWidth; x++) {
+  for (let y = 1; y < src.height; y++) {
+    for (let x = 1; x < src.width; x++) {
       sum = [0, 0, 0, 0]
       for (let u = -1; u <= 1; u++) {
         for (let v = -1; v <= 1; v++) {
-          index = ((y + v) * this._canvasWidth + (x + u)) * 4
+          index = ((y + v) * src.width + (x + u)) * 4
           sum[0] += srcPixels[index]
           sum[1] += srcPixels[index + 1]
           sum[2] += srcPixels[index + 2]
@@ -346,24 +398,6 @@ _filterLinear (src) {
   return dst
 }
 
-/*
-
-gpu_image<float4> gpu_cef_relax( const gpu_image<float4>& st,
-                                 int jacobi_steps )
-{
-    if ((st.w() <= 2) || (st.h() <= 2)) return st;
-    gpu_image<float4> tmp;
-    tmp = gpu_cef_restrict(st);
-    tmp = gpu_cef_relax(tmp, jacobi_steps);
-    tmp = gpu_cef_interpolate(st, tmp);
-    for (int k = 0; k < jacobi_steps; ++k) {
-        tmp = gpu_cef_jacobi_step(tmp);
-    }
-    return tmp;
-}
-
- */
-
 _st_lambda1 (E, F, G) {
   E /= 255.0
   F /= 255.0
@@ -381,20 +415,20 @@ _st_lambda1 (E, F, G) {
 
 _gpu_cef_scharr (src) {
   var dst = this._renderer.createCanvas() // TODO move canvas create, so we don't create it everytime
-  dst.width = this._canvasWidth
-  dst.height = this._canvasHeight
+  dst.width = src.width
+  dst.height = src.height
   var dstContext = dst.getContext('2d')
   var srcContext = src.getContext('2d')
-  var dstData = dstContext.getImageData(0, 0, this._canvasWidth, this._canvasHeight)
-  var srcData = srcContext.getImageData(0, 0, this._canvasWidth, this._canvasHeight)
+  var dstData = dstContext.getImageData(0, 0, src.width, src.height)
+  var srcData = srcContext.getImageData(0, 0, src.width, src.height)
   var dstPixels = dstData.data
   var original = srcData.data
 
   var index = 0
   var u = [0, 0, 0]
   var v = [0, 0, 0]
-  for (var y = 1; y < this._canvasHeight; y++) {
-    for (var x = 1; x < this._canvasWidth; x++) {
+  for (var y = 1; y < src.height; y++) {
+    for (var x = 1; x < src.width; x++) {
       var ix = x
       var iy = y
       for (var c = 0; c < 3; c++) {
@@ -402,56 +436,56 @@ _gpu_cef_scharr (src) {
         u[c] = 0
         ix = x - 1
         iy = y - 1
-        index = (iy * this._canvasWidth + ix) * 4 + c
+        index = (iy * src.width + ix) * 4 + c
         u[c] += -0.183 * original[index]
 
         iy = y
-        index = (iy * this._canvasWidth + ix) * 4 + c
+        index = (iy * src.width + ix) * 4 + c
         u[c] += -0.183 * original[index]
 
         iy = y + 1
-        index = (iy * this._canvasWidth + ix) * 4 + c
+        index = (iy * src.width + ix) * 4 + c
         u[c] += -0.183 * original[index]
 
         ix = x + 1
         iy = y - 1
-        index = (iy * this._canvasWidth + ix) * 4 + c
+        index = (iy * src.width + ix) * 4 + c
         u[c] += 0.183 * original[index]
 
         iy = y
-        index = (iy * this._canvasWidth + ix) * 4 + c
+        index = (iy * src.width + ix) * 4 + c
         u[c] += 0.183 * original[index]
 
         iy = y + 1
-        index = (iy * this._canvasWidth + ix) * 4 + c
+        index = (iy * src.width + ix) * 4 + c
         u[c] += 0.183 * original[index]
         u[c] *= 0.5
         // calculate v
         v[c] = 0
         iy = y - 1
         ix = x - 1
-        index = (iy * this._canvasWidth + ix) * 4 + c
+        index = (iy * src.width + ix) * 4 + c
         v[c] += -0.183 * original[index]
 
         ix = x
-        index = (iy * this._canvasWidth + ix) * 4 + c
+        index = (iy * src.width + ix) * 4 + c
         v[c] += -0.183 * original[index]
 
         ix = x + 1
-        index = (iy * this._canvasWidth + ix) * 4 + c
+        index = (iy * src.width + ix) * 4 + c
         v[c] += -0.183 * original[index]
 
         iy = y + 1
         ix = x - 1
-        index = (iy * this._canvasWidth + ix) * 4 + c
+        index = (iy * src.width + ix) * 4 + c
         v[c] += 0.183 * original[index]
 
         ix = x
-        index = (iy * this._canvasWidth + ix) * 4 + c
+        index = (iy * src.width + ix) * 4 + c
         v[c] += 0.183 * original[index]
 
         ix = x + 1
-        index = (iy * this._canvasWidth + ix) * 4 + c
+        index = (iy * src.width + ix) * 4 + c
         v[c] += 0.183 * original[index]
         v[c] *= 0.5
       }
@@ -469,7 +503,7 @@ _gpu_cef_scharr (src) {
       g[1] = v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
       g[2] = u[0] * v[0] + u[1] * v[1] + u[2] * v[2]
 
-      index = (y * this._canvasWidth + x) * 4
+      index = (y * src.width + x) * 4
       dstPixels[index] = g[0] * 255
       dstPixels[index + 1] = g[1] * 255
       dstPixels[index + 2] = g[2] * 255
