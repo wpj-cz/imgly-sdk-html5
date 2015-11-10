@@ -94,37 +94,6 @@ class CefFilter extends Filter {
     }
   }
 
-  /*
-  gpu_image<float4> img = gpu_image_from_qimage<float4>(src);
-  gpu_image<float4> st;
-
-  for (int k = 0; k < m_N; ++k) {
-  st = gpu_cef_st(img, st, m_sigma_d, m_tau_r, m_jacobi_steps);
-  if (k == m_N-1) m_st = st.cpu();
-  img = gpu_stgauss3_filter(
-  img,
-  st,
-  m_sigma_t,
-  m_color_sampling == "linear",
-  m_st_sampling == "linear",
-  (m_order == "rk2")? 2 : 1,
-  m_step_size,
-  m_adaptive);
-
-  if (m_shock_filtering) {
-  st = gpu_cef_st(img, st, m_sigma_d, m_tau_r, m_jacobi_steps);
-  gpu_image<float> L = gpu_rgb2gray(img);
-  L =  gpu_gauss_filter_xy(L, m_sigma_i);
-  gpu_image<float> sign = gpu_cef_flog(L, st, m_sigma_g);
-  img = gpu_cef_shock(L, st, sign, img, m_radius, m_tau_s);
-}
-}
-
-if (m_edge_smooting) {
-img = gpu_stgauss3_filter(img, st, m_sigma_a, true, true, 2, 1, false);
-}
-*/
-
 /**
 * Renders the oil operation to a canvas
 * @param  {CanvasRenderer} renderer
@@ -209,7 +178,7 @@ _gpu_cef_merge (st_cur, st_prev) {
       dstPixels[index + 3] = st[3]
     }
   }
-
+  dstContext.putImageData(dstData, 0, 0)
   return dst
 }
 
@@ -286,12 +255,49 @@ _gpu_cef_restrict (st) {
       dstPixels[index + 3] = sum[3]
     }
   }
+  dstContext.putImageData(dstData, 0, 0)
   return dst
 }
 
 _gpu_cef_interpolate (st_fine, st_coarse) {
   st_coarse = this._filterLinear(st_coarse)
-  return st_fine
+  var dst = this._renderer.createCanvas()
+  dst.width = st_fine.width
+  dst.height = st_fine.height
+  var dstContext = dst.getContext('2d')
+  var fineContext = st_fine.getContext('2d')
+  var dstData = dstContext.getImageData(0, 0, dst.width, dst.height)
+  var fineData = fineContext.getImageData(0, 0, dst.width, dst.height)
+  var dstPixels = dstData.data
+  var finePixels = fineData.data
+  var coarsePixels = st_coarse.getContext('2d').getImageData(0, 0, st_coarse.width, st_coarse.height)
+
+  var tmp = [0, 0, 0, 0]
+  var index = 0
+  var halfIndex = 0
+  for (let y = 1; y < this._canvasHeight; y++) {
+    for (let x = 1; x < this._canvasWidth; x++) {
+      index = (y * this._canvasWidth + x) * 4
+      if (srcPixels[index + 3] < 255) {
+        halfIndex = ((y * 0.5) * this._canvasWidth + (x * 0.5) * 4
+        tmp[index] = coarsePixels[halfIndex]
+        tmp[index + 1] = coarsePixels[halfIndex + 1]
+        tmp[index + 2] = coarsePixels[halfIndex + 2]
+        tmp[index + 3] = 0
+      } else {
+        tmp[index] = srcPixels[index]
+        tmp[index + 1] = srcPixels[index + 1]
+        tmp[index + 2] = srcPixels[index + 2]
+        tmp[index + 3] = srcPixels[index + 3]
+      }
+      dstPixels[index] = tmp[index]
+      dstPixels[index + 1] = tmp[index + 1]
+      dstPixels[index + 2] = tmp[index + 2]
+      dstPixels[index + 3] = tmp[index + 3]
+    }
+  }
+  dstContext.putImageData(dstData, 0, 0)
+  return dst
 }
 
 _gpu_cef_jacobi_step (st) {
@@ -299,9 +305,9 @@ _gpu_cef_jacobi_step (st) {
 }
 
 _filterLinear (src) {
-  var dst = this._renderer.createCanvas() // TODO move canvas create, so we don't create it everytime
-  dst.width = this._canvasWidth
-  dst.height = this._canvasHeight
+  var dst = this._renderer.createCanvas()
+  dst.width = src.width
+  dst.height = src.height
   var dstContext = dst.getContext('2d')
   var srcContext = src.getContext('2d')
   var dstData = dstContext.getImageData(0, 0, dst.width, dst.height)
@@ -336,6 +342,7 @@ _filterLinear (src) {
       dstPixels[index + 3] = sum[3]
     }
   }
+  dstContext.putImageData(dstData, 0, 0)
   return dst
 }
 
