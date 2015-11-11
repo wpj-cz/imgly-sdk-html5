@@ -108,6 +108,13 @@ renderCanvas (renderer) {
   st = this._gpu_cef_scharr(img) // this._gpu_cef_st(img, st, this._sigma_d, this._tau_r, this._jacobi_steps)
   var context = st.getContext('2d')
   var imageData = context.getImageData(0, 0, img.width, img.height)
+  var index = 0
+  for (let y = 1; y < st.height; y++) {
+    for (let x = 1; x < st.width; x++) {
+      index = (y * st.width + x) * 4
+      imageData.data[index + 3] = 255
+    }
+  }
   img.getContext('2d').putImageData(imageData, 0, 0)
 }
 
