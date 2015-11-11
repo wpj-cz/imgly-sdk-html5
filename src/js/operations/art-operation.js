@@ -18,6 +18,7 @@ import Lab2RgbFilter from './art/lab2rgb-filter'
 import DogFilter from './art/dog-filter'
 import SobelFilter from './art/sobel-filter'
 import GaussianFilter from './art/gaussian-filter'
+import CefFilter from './art/cef-filter'
 
 /**
 * An operation that turns an image into some piece of art
@@ -35,6 +36,7 @@ class ArtOperation extends Operation {
     this._dogFilter = new DogFilter()
     this._sobelFilter = new SobelFilter()
     this._gaussianFilter = new GaussianFilter()
+    this._cefFilter = new CefFilter()
   }
 
   /**
@@ -52,7 +54,7 @@ class ArtOperation extends Operation {
   * @private
   */
   _renderCanvas (renderer) {
-    this._sobelFilter.renderCanvas(renderer)
+    this._cefFilter.renderCanvas(renderer)
   }
 
   /**

@@ -101,12 +101,16 @@ class CefFilter extends Filter {
 */
 renderCanvas (renderer) {
   var img = renderer.getCanvas()
+//  console.log(img)
   this._setStaticParameters()
   this._renderer = renderer
   var st = null
-
-  st = this._gpu_cef_st(img, st, this._sigma_d, this._tau_r, this._jacobi_steps)
+  st = this._gpu_cef_scharr(img) // this._gpu_cef_st(img, st, this._sigma_d, this._tau_r, this._jacobi_steps)
+  var context = st.getContext('2d')
+  var imageData = context.getImageData(0, 0, img.width, img.height)
+  img.getContext('2d').putImageData(imageData, 0, 0)
 }
+
 /* THESE ARE SET in the original code, we have to mind these while converting
 new ParamChoice (g, "order", "rk2", "euler|rk2", &m_order);
 new ParamBool   (g, "adaptive", true, &m_adaptive);
@@ -131,8 +135,8 @@ _setStaticParameters () {
 
 _gpu_cef_st (src, st_prev, sigma_d, tau_r, jacobi_steps) {
   var st = this._gpu_cef_scharr(src)
-  st = this._gpu_cef_merge(st, st_prev)
-  st = this._gpu_gauss_filter_xy(st, sigma_d)
+//  st = this._gpu_cef_merge(st, st_prev)
+//  st = this._gpu_gauss_filter_xy(st, sigma_d)
   return st
 }
 // threshold = sigma_d
@@ -427,8 +431,8 @@ _gpu_cef_scharr (src) {
   var index = 0
   var u = [0, 0, 0]
   var v = [0, 0, 0]
-  for (var y = 1; y < src.height; y++) {
-    for (var x = 1; x < src.width; x++) {
+  for (var y = 0; y < src.height; y++) {
+    for (var x = 0; x < src.width; x++) {
       var ix = x
       var iy = y
       for (var c = 0; c < 3; c++) {
@@ -507,7 +511,7 @@ _gpu_cef_scharr (src) {
       dstPixels[index] = g[0] * 255
       dstPixels[index + 1] = g[1] * 255
       dstPixels[index + 2] = g[2] * 255
-      dstPixels[index + 3] = 1
+      dstPixels[index + 3] = 255
     }
   }
   dstContext.putImageData(dstData, 0, 0)
