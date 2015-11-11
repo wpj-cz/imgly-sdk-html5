@@ -105,7 +105,7 @@ renderCanvas (renderer) {
   this._setStaticParameters()
   this._renderer = renderer
   var st = null
-  st = this._gpu_cef_scharr(img) // this._gpu_cef_st(img, st, this._sigma_d, this._tau_r, this._jacobi_steps)
+  st = this._gpu_cef_st(img, st, this._sigma_d, this._tau_r, this._jacobi_steps)
   var context = st.getContext('2d')
   var imageData = context.getImageData(0, 0, img.width, img.height)
   var index = 0
@@ -141,8 +141,8 @@ _setStaticParameters () {
 }
 
 _gpu_cef_st (src, st_prev, sigma_d, tau_r, jacobi_steps) {
-  var st = this._gpu_cef_scharr(src)
-//  st = this._gpu_cef_merge(st, st_prev)
+  var st = this._filterLinear(src)
+  //st = this._gpu_cef_merge(st, st_prev)
 //  st = this._gpu_gauss_filter_xy(st, sigma_d)
   return st
 }
@@ -397,9 +397,9 @@ _filterLinear (src) {
       sum[2] /= 9
       sum[3] /= 9
 
-      index = (y * this._canvasWidth + x) * 4
+      index = (y * src.width + x) * 4
 
-      dstPixels[index] = sum[0]
+      dstPixels[index] = sum[1]
       dstPixels[index + 1] = sum[1]
       dstPixels[index + 2] = sum[2]
       dstPixels[index + 3] = sum[3]
