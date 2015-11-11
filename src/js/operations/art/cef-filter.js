@@ -399,7 +399,7 @@ _filterLinear (src) {
 
       index = (y * src.width + x) * 4
 
-      dstPixels[index] = sum[1]
+      dstPixels[index] = sum[0]
       dstPixels[index + 1] = sum[1]
       dstPixels[index + 2] = sum[2]
       dstPixels[index + 3] = sum[3]
