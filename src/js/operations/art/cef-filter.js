@@ -105,7 +105,10 @@ renderCanvas (renderer) {
   this._setStaticParameters()
   this._renderer = renderer
   var st = null
-  st = this._gpu_cef_st(img, st, this._sigma_d, this._tau_r, this._jacobi_steps)
+  for (var k = 0; k < this._N; ++k) {
+    st = this._gpu_cef_st(img, st, this._sigma_d, this._tau_r, this._jacobi_steps)
+  }
+
   var context = st.getContext('2d')
   var imageData = context.getImageData(0, 0, img.width, img.height)
   var index = 0
@@ -141,13 +144,18 @@ _setStaticParameters () {
 }
 
 _gpu_cef_st (src, st_prev, sigma_d, tau_r, jacobi_steps) {
-  var st = this._filterLinear(src)
-  //st = this._gpu_cef_merge(st, st_prev)
-//  st = this._gpu_gauss_filter_xy(st, sigma_d)
+  var st = this._gpu_cef_scharr(src)
+  st = this._gpu_cef_merge(st, st_prev)
+  st = this._filterLinear(st)
   return st
 }
 // threshold = sigma_d
 _gpu_cef_merge (st_cur, st_prev) {
+  if (st_prev === null) {
+    console.log('null')
+    return this._gpu_cef_jacobi_step(st_cur)
+  }
+
   var dst = this._renderer.createCanvas() // TODO move canvas create, so we don't create it everytime
   dst.width = st_cur.width
   dst.height = st_cur.height
@@ -164,8 +172,8 @@ _gpu_cef_merge (st_cur, st_prev) {
 
   var st = [0, 0, 0, 0]
   var index = 0
-  for (let y = 1; y < st_cur.height; y++) {
-    for (let x = 1; x < st_cur.width; x++) {
+  for (let y = 0; y < st_cur.height; y++) {
+    for (let x = 0; x < st_cur.width; x++) {
       index = (y * st_cur.width + x) * 4
       st[0] = curPixels[index]
       st[1] = curPixels[index + 1]
@@ -322,8 +330,8 @@ _gpu_cef_jacobi_step (src) {
 
   var tmp = [0, 0, 0, 0]
   var index = 0
-  for (let y = 1; y < src.height; y++) {
-    for (let x = 1; x < src.width; x++) {
+  for (let y = 0; y < src.height; y++) {
+    for (let x = 0; x < src.width; x++) {
       index = (y * src.width + x) * 4
       if (srcPixels[index + 3] < 1) {
         var tmpIndex = (y * src.width + (x + 1) * 4)
@@ -380,8 +388,8 @@ _filterLinear (src) {
 
   var sum = [0, 0, 0, 0]
   var index = 0
-  for (let y = 1; y < src.height; y++) {
-    for (let x = 1; x < src.width; x++) {
+  for (let y = 0; y < src.height; y++) {
+    for (let x = 0; x < src.width; x++) {
       sum = [0, 0, 0, 0]
       for (let u = -1; u <= 1; u++) {
         for (let v = -1; v <= 1; v++) {
@@ -518,13 +526,159 @@ _gpu_cef_scharr (src) {
       dstPixels[index] = g[0] * 255
       dstPixels[index + 1] = g[1] * 255
       dstPixels[index + 2] = g[2] * 255
-      dstPixels[index + 3] = 255
+      dstPixels[index + 3] = 1
     }
   }
   dstContext.putImageData(dstData, 0, 0)
   return dst
 }
 
+// __device__ void operator()(float u, float2 p)
+_stgauss3_filter_f (src_pixel, u, x, y) {
+  var k = Math.exp(-u * u / this._stgauss3_filter_twoSigma2)
+
+  this._stgauss3_filter_c[0] += k * src_pixel[0]
+  this._stgauss3_filter_c[1] += k * src_pixel[1]
+  this._stgauss3_filter_c[2] += k * src_pixel[2]
+
+  this._stgauss3_filter_w += k
+}
+
+_st_integrate_rk2 (src, st, x, y) {
+  var stContext = st.getContext('2d')
+  var stData = stContext.getImageData(0, 0, st.width, st.height)
+  var stPixels = stData.data
+  var srcContext = src.getContext('2d')
+  var srcData = srcContext.getImageData(0, 0, src.width, src.height)
+  var srcPixels = srcData.data
+
+  var index = (y * src.width + x) * 4
+  var src_pixel = [srcPixels[index], srcPixels[index + 1], srcPixels[index + 2]]
+  var st_pixel = [stPixels[index], stPixels[index + 1], stPixels[index + 2]]
+
+  this._stgauss3_filter_f(src_pixel, 0, x, y)
+  var v0 = this._st_minor_ev(st_pixel)
+  var sign = -1
+//  var dr = this._stgauss3_filter_radius / Math.PI
+  do {
+    var v = [v0[0] * sign, v0[1] * sign]
+    var px = x
+    var py = y
+    var u = 0
+
+    for (var kk = 0; kk < 100; ++kk) {
+      index = (py * src.width + px) * 4
+      st_pixel = [stPixels[index], stPixels[index + 1], stPixels[index + 2]]
+      var t = this._st_minor_ev(st_pixel)
+      if (this._dot(v, t) < 0) {
+        t[0] = -t[0]
+        t[1] = -t[1]
+      }
+
+      var phx = px + 0.5 * this._step_size * t[0]
+      var phy = py + 0.5 * this._step_size * t[1]
+
+      index = (phy * src.width + phx) * 4
+      st_pixel = [stPixels[index], stPixels[index + 1], stPixels[index + 2]]
+      t = this._st_minor_ev(st_pixel)
+      var vt = this._dot(v, t)
+      if (vt < 0) {
+        t[0] = -t[0]
+        t[1] = -t[1]
+        vt = -vt
+      }
+
+      v = t
+      px += this._step_size * t[0]
+      py += this._step_size * t[1]
+
+/*      if (adaptive) {
+          var Lk = dr * acosf(fminf(vt,1));
+          u += fmaxf(step_size, Lk);
+      } else {*/
+      u += this._step_size
+      // }
+
+      if ((u >= this._stgauss3_filter_radius) || (px < 0) || (px >= src.width) ||
+          (py < 0) || (py >= src.height)) {
+        break
+      }
+      if (sign > 0) {
+        if (u < 0) {
+          u *= -1
+        }
+      } else {
+        if (u > 0) {
+          u *= -1
+        }
+      }
+      index = (py * src.width + px) * 4
+      src_pixel = [srcPixels[index], srcPixels[index + 1], srcPixels[index + 2]]
+      this._stgauss3_filter_f(src_pixel, u, px, py)
+    }
+    sign *= -1
+  } while (sign > 0)
+}
+
+_dot (v, t) {
+  return v[0] * t[0] + v[1] * t[1]
+}
+
+_st_minor_ev (g) {
+  var ev = this._solve_eig_psd_ev(g[0], g[1], g[2])
+  return [ev[1], -ev[0]]
+}
+
+_solve_eig_psd_ev (E, F, G) {
+  var B = (E + G) / 2
+  if (B > 0) {
+    var D = (E - G) / 2
+    var FF = F * F
+    var R = Math.sqrt(D * D + FF)
+    if (R > 0) {
+      if (D >= 0) {
+        var nx = D + R
+        let temp = Math.sqrt(nx * nx + FF)
+        return [nx * temp, F * temp]
+      } else {
+        var ny = -D + R
+        let temp = Math.sqrt(ny * ny + FF)
+        return [F * temp, ny * temp]
+      }
+    }
+  }
+  return [1, 0]
+}
+
+_gpu_stgauss3_filter (src, st) {
+  var dst = this._renderer.createCanvas() // TODO move canvas create, so we don't create it everytime
+  dst.width = src.width
+  dst.height = src.height
+  var dstContext = dst.getContext('2d')
+  var dstData = dstContext.getImageData(0, 0, src.width, src.height)
+  var dstPixels = dstData.data
+  this._init_stgauss_f()
+
+  var index = 0
+  for (var y = 0; y < src.height; y++) {
+    for (var x = 0; x < src.width; x++) {
+      this._stgauss3_filter_c = [0, 0, 0]
+      this._stgauss3_filter_w = 0
+      this._st_integrate_rk2(src, st, x, y)
+      dstPixels[index] = this._stgauss3_filter_c[0] / this._stgauss3_filter_w
+      dstPixels[index + 1] = this._stgauss3_filter_c[1] / this._stgauss3_filter_w
+      dstPixels[index + 2] = this._stgauss3_filter_c[2] / this._stgauss3_filter_w
+      dstPixels[index + 3] = 1
+    }
+  }
+}
+
+_init_stgauss_f () {
+  this._stgauss3_filter_radius = 2 * this._sigma_t
+  this._stgauss3_filter_twoSigma2 = 2 * this._sigma_t * this._sigma_t
+  this._stgauss3_filter_c = [0, 0, 0]
+  this._stgauss3_filter_w = 0
+}
 /**
 * A unique string that identifies this operation. Can be used to select
 * the active filter.
