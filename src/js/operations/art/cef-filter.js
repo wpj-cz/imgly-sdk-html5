@@ -107,6 +107,7 @@ renderCanvas (renderer) {
   var st = null
   for (var k = 0; k < this._N; ++k) {
     st = this._gpu_cef_st(img, st, this._sigma_d, this._tau_r, this._jacobi_steps)
+    img = this._gpu_stgauss3_filter(img, st)
   }
 
   var context = st.getContext('2d')
