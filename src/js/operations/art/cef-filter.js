@@ -105,21 +105,20 @@ renderCanvas (renderer) {
   this._setStaticParameters()
   this._renderer = renderer
   var st = null
-  for (var k = 0; k < this._N; ++k) {
-    st = this._gpu_cef_st(img, st, this._sigma_d, this._tau_r, this._jacobi_steps)
-    img = this._gpu_stgauss3_filter(img, st)
-  }
-
-  var context = st.getContext('2d')
+  st = this._gpu_cef_st(img, st)
+  img = this._gpu_stgauss3_filter(img, st)
+  var context = img.getContext('2d')
   var imageData = context.getImageData(0, 0, img.width, img.height)
   var index = 0
   for (let y = 1; y < st.height; y++) {
     for (let x = 1; x < st.width; x++) {
       index = (y * st.width + x) * 4
+//      imageData.data[index + 0] *= 21
+      //imageData.data[index + 1] += 21
       imageData.data[index + 3] = 255
     }
   }
-  img.getContext('2d').putImageData(imageData, 0, 0)
+  renderer.getContext().putImageData(imageData, 0, 0)
 }
 
 /* THESE ARE SET in the original code, we have to mind these while converting
@@ -144,10 +143,10 @@ _setStaticParameters () {
   this._sigma_a = 1.5
 }
 
-_gpu_cef_st (src, st_prev, sigma_d, tau_r, jacobi_steps) {
+_gpu_cef_st (src, st_prev) {
   var st = this._gpu_cef_scharr(src)
   st = this._gpu_cef_merge(st, st_prev)
-  st = this._filterLinear(st)
+  //st = this._filterLinear(st)
   return st
 }
 // threshold = sigma_d
@@ -524,9 +523,9 @@ _gpu_cef_scharr (src) {
       g[2] = u[0] * v[0] + u[1] * v[1] + u[2] * v[2]
 
       index = (y * src.width + x) * 4
-      dstPixels[index] = g[0] * 255
-      dstPixels[index + 1] = g[1] * 255
-      dstPixels[index + 2] = g[2] * 255
+      dstPixels[index] = g[0] * 2255
+      dstPixels[index + 1] = g[1] * 2255
+      dstPixels[index + 2] = g[2] * 2255
       dstPixels[index + 3] = 1
     }
   }
@@ -545,22 +544,18 @@ _stgauss3_filter_f (src_pixel, u, x, y) {
   this._stgauss3_filter_w += k
 }
 
-_st_integrate_rk2 (src, st, x, y) {
-  var stContext = st.getContext('2d')
-  var stData = stContext.getImageData(0, 0, st.width, st.height)
-  var stPixels = stData.data
-  var srcContext = src.getContext('2d')
-  var srcData = srcContext.getImageData(0, 0, src.width, src.height)
-  var srcPixels = srcData.data
-
-  var index = (y * src.width + x) * 4
+_st_integrate_rk2 (srcPixels, stPixels, x, y, width, height) {
+  var index = (y * width + x) * 4
   var src_pixel = [srcPixels[index], srcPixels[index + 1], srcPixels[index + 2]]
   var st_pixel = [stPixels[index], stPixels[index + 1], stPixels[index + 2]]
 
   this._stgauss3_filter_f(src_pixel, 0, x, y)
   var v0 = this._st_minor_ev(st_pixel)
   var sign = -1
-//  var dr = this._stgauss3_filter_radius / Math.PI
+
+  //  console.log(x,y)
+  //  var dr = this._stgauss3_filter_radius / Math.P\\
+  // console.log ('arsch')
   do {
     var v = [v0[0] * sign, v0[1] * sign]
     var px = x
@@ -568,7 +563,7 @@ _st_integrate_rk2 (src, st, x, y) {
     var u = 0
 
     for (var kk = 0; kk < 100; ++kk) {
-      index = (py * src.width + px) * 4
+      index = (py * width + px) * 4
       st_pixel = [stPixels[index], stPixels[index + 1], stPixels[index + 2]]
       var t = this._st_minor_ev(st_pixel)
       if (this._dot(v, t) < 0) {
@@ -579,7 +574,7 @@ _st_integrate_rk2 (src, st, x, y) {
       var phx = px + 0.5 * this._step_size * t[0]
       var phy = py + 0.5 * this._step_size * t[1]
 
-      index = (phy * src.width + phx) * 4
+      index = (phy * width + phx) * 4
       st_pixel = [stPixels[index], stPixels[index + 1], stPixels[index + 2]]
       t = this._st_minor_ev(st_pixel)
       var vt = this._dot(v, t)
@@ -600,8 +595,8 @@ _st_integrate_rk2 (src, st, x, y) {
       u += this._step_size
       // }
 
-      if ((u >= this._stgauss3_filter_radius) || (px < 0) || (px >= src.width) ||
-          (py < 0) || (py >= src.height)) {
+      if ((u >= this._stgauss3_filter_radius) || (px < 0) || (px >= width) ||
+          (py < 0) || (py >= height)) {
         break
       }
       if (sign > 0) {
@@ -613,12 +608,14 @@ _st_integrate_rk2 (src, st, x, y) {
           u *= -1
         }
       }
-      index = (py * src.width + px) * 4
+      index = (py * width + px) * 4
       src_pixel = [srcPixels[index], srcPixels[index + 1], srcPixels[index + 2]]
       this._stgauss3_filter_f(src_pixel, u, px, py)
     }
     sign *= -1
+//    console.log(sign)
   } while (sign > 0)
+//  console.log ('end')
 }
 
 _dot (v, t) {
@@ -658,6 +655,15 @@ _gpu_stgauss3_filter (src, st) {
   var dstContext = dst.getContext('2d')
   var dstData = dstContext.getImageData(0, 0, src.width, src.height)
   var dstPixels = dstData.data
+
+  var stContext = st.getContext('2d')
+  var stData = stContext.getImageData(0, 0, st.width, st.height)
+  var stPixels = stData.data
+
+  var srcContext = src.getContext('2d')
+  var srcData = srcContext.getImageData(0, 0, src.width, src.height)
+  var srcPixels = srcData.data
+
   this._init_stgauss_f()
 
   var index = 0
@@ -665,13 +671,16 @@ _gpu_stgauss3_filter (src, st) {
     for (var x = 0; x < src.width; x++) {
       this._stgauss3_filter_c = [0, 0, 0]
       this._stgauss3_filter_w = 0
-      this._st_integrate_rk2(src, st, x, y)
+      this._st_integrate_rk2(srcPixels, stPixels, x, y, src.width, src.height)
+      index = (y * src.width + x) * 4
       dstPixels[index] = this._stgauss3_filter_c[0] / this._stgauss3_filter_w
       dstPixels[index + 1] = this._stgauss3_filter_c[1] / this._stgauss3_filter_w
       dstPixels[index + 2] = this._stgauss3_filter_c[2] / this._stgauss3_filter_w
       dstPixels[index + 3] = 1
     }
   }
+  dstContext.putImageData(dstData, 0, 0)
+  return dst
 }
 
 _init_stgauss_f () {
