@@ -274,7 +274,7 @@ class NightUI extends UI {
     })
 
     this._topControls.on('export', () => {
-      this.export()
+      this.save()
     })
 
     // Pass zoom in event
@@ -467,6 +467,7 @@ class NightUI extends UI {
   _registerLanguages () {
     this.registerLanguage('en', require('./lang/en.json'))
     this.registerLanguage('de', require('./lang/de.json'))
+    this.registerLanguage('cs', require('./lang/cs.json'))
   }
 
   /**
@@ -711,7 +712,25 @@ class NightUI extends UI {
       }
     })
   }
-
+/**
+ * Save the current image into the file
+ */
+save () {
+    this._kit.render("data-url", "image/png")
+       .then(function(dataUrl) {
+       $.ajax({
+          type: "POST",
+          url: window.location.href,
+          data: {
+            save: true,
+            image: dataUrl
+          }
+       }).done(function(o) {
+         close();
+       });
+    });
+  }
+  
   /**
    * Exports the current image with the default settings
    */

@@ -1,0 +1,61 @@
+{
+  "operations": {
+    "brightness": "Jas",
+    "contrast": "Kontrast",
+    "filters": "Filtry",
+    "flip": "Přetočení",
+    "frames": "Rámeček",
+    "radial-blur": "Rozmazání",
+    "rotation": "Rotace",
+    "saturation": "Sytost",
+    "stickers": "Stickers",
+    "text": "Text",
+    "tilt-shift": "Tilt-Shift",
+    "crop": "Oříznutí",
+    "brush": "Štětec"
+  },
+  "top-controls": {
+    "new": "New",
+    "undo": "Zpět",
+    "export": "Uložit",
+    "zoom": "Přiblížení"
+  },
+  "splash": {
+    "upload": {
+      "headline": "Upload a picture",
+      "description": "Click here to upload a picture from your library or just drag and drop"
+    },
+    "or": "or",
+    "webcam": {
+      "headline": "Take a picture",
+      "description": "Click here to take a picture with your webcam or phone"
+    }
+  },
+  "generic": {
+    "loading": "Načítání",
+    "exporting": "Exporting",
+    "importing": "Importování",
+    "color": "Barva",
+    "error_headline": "Vyskytla se chyba.",
+    "warning_headline": "Upozornění!"
+  },
+  "controls": {
+    "frames": {
+      "color": "Barva"
+    },
+    "brush": {
+      "color": "Barva"
+    },
+    "text": {
+      "foreground": "Popředí",
+      "background": "Pozadí"
+    }
+  },
+  "errors": {
+    "WEBGL_CONTEXT_LOST": "Your browser took too long to render the image. Please try applying less operations.",
+    "WEBGL_CONTEXT_LOST_LIMIT": "Your browser failed multiple times while rendering the image."
+  },
+  "warnings": {
+    "image_resized": "Váš obrázek přesáhnul maximální velikost $1 megapixelů a proto byla velikost změněna na $2x$3 pixelů."
+  }
+}
