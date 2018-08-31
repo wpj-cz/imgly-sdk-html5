@@ -34,8 +34,8 @@ class NightUI extends UI {
     // The `Night` UI has a fixed operation order
     this._preferredOperationOrder = [
       // First, all operations that affect the image dimensions
-      'rotation',
       'crop',
+      'rotation',
       'flip',
 
       // Then color operations (first filters, then fine-tuning)
@@ -46,9 +46,7 @@ class NightUI extends UI {
 
       // Then post-processing
       'radial-blur',
-      'tilt-shift',
       'frames',
-      'stickers',
       'text',
       'brush'
     ]
@@ -445,13 +443,13 @@ class NightUI extends UI {
    * @private
    */
   _registerControls () {
-    this.registerControl('filters', 'filters', require('./controls/filters-control'))
+    this.registerControl('crop', 'crop', require('./controls/crop-control'))
     this.registerControl('rotation', 'rotation', require('./controls/rotation-control'))
     this.registerControl('flip', 'flip', require('./controls/flip-control'))
+    this.registerControl('filters', 'filters', require('./controls/filters-control'))
     this.registerControl('brightness', 'brightness', require('./controls/brightness-control'))
     this.registerControl('contrast', 'contrast', require('./controls/contrast-control'))
     this.registerControl('saturation', 'saturation', require('./controls/saturation-control'))
-    this.registerControl('crop', 'crop', require('./controls/crop-control'))
     this.registerControl('radial-blur', 'radial-blur', require('./controls/radial-blur-control'))
     this.registerControl('tilt-shift', 'tilt-shift', require('./controls/tilt-shift-control'))
     this.registerControl('frames', 'frames', require('./controls/frames-control'))
@@ -716,6 +714,7 @@ class NightUI extends UI {
  * Save the current image into the file
  */
 save () {
+    $(".imglykit-export").text("Ukládání");
     this._kit.render("data-url", "image/png")
        .then(function(dataUrl) {
        $.ajax({
