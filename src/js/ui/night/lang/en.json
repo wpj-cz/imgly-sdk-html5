@@ -1,18 +1,18 @@
 {
   "operations": {
-    "brightness": "Brightness",
-    "contrast": "Contrast",
-    "filters": "Filters",
-    "flip": "Flip",
-    "frames": "Frames",
-    "radial-blur": "Radial Blur",
-    "rotation": "Rotation",
-    "saturation": "Saturation",
-    "stickers": "Stickers",
-    "text": "Text",
-    "tilt-shift": "Tilt-Shift",
-    "crop": "Crop",
-    "brush": "Brush"
+    "brightness": {"label":"Brightness"},
+    "contrast": {"label":"Contrast"},
+    "filters": {"label":"Filters"},
+    "flip": {"label":"Flip"},
+    "frames": {"label":"Frames"},
+    "radial-blur": {"label":"Radial Blur"},
+    "rotation": {"label":"Rotation"},
+    "saturation": {"label":"Saturation"},
+    "stickers": {"label":"Stickers"},
+    "text": {"label":"Text"},
+    "tilt-shift": {"label":"Tilt-Shift"},
+    "crop": {"label":"Crop"},
+    "brush": {"label":"Brush"}
   },
   "top-controls": {
     "new": "New",

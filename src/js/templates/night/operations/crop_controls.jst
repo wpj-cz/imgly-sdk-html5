@@ -5,6 +5,7 @@
       {{ var enabled = ratio.selected; }}
       <li data-identifier="{{= identifier}}" data-ratio="{{= ratio.ratio}}"{{? enabled}} data-selected{{?}}>
         <img src="{{=it.helpers.assetPath('ui/night/crop/' + identifier + '.png')}}" />
+        <div class="imglykit-controls-label">{{=it.helpers.translate('operations.crop.children.' + identifier)}}</div>
       </li>
     {{ } }}
   </ul>

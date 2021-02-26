@@ -710,23 +710,14 @@ class NightUI extends UI {
       }
     })
   }
-/**
- * Save the current image into the file
- */
-save () {
+   /**
+    * Save the current image into the file
+    */
+   save () {
     $(".imglykit-export").text("Ukládání");
-    this._kit.render("data-url", "image/png")
-       .then(function(dataUrl) {
-       $.ajax({
-          type: "POST",
-          url: window.location.href,
-          data: {
-            save: true,
-            image: dataUrl
-          }
-       }).done(function(o) {
-         close();
-       });
+	 var _this = this;
+    this._kit.render("data-url", "image/png").then(function(dataUrl) {
+       _this._kit.emit('save', dataUrl);
     });
   }
   

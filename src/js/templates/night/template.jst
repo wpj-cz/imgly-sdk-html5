@@ -139,7 +139,7 @@
                 {{ var control = it.controls[identifier]; }}
                 <li class="imglykit-controls-item--with-label" data-identifier="{{= control.identifier}}"{{? it.controlsDisabled }} data-disabled{{?}}>
                   <img src="{{=it.helpers.assetPath('ui/night/operations/' + control.identifier + '.png') }}" />
-                  <div class="imglykit-controls-label">{{=it.helpers.translate('operations.' + control.identifier)}}</div>
+                  <div class="imglykit-controls-label">{{=it.helpers.translate('operations.' + control.identifier + ".label")}}</div>
                 </li>
               {{ } }}
               </ul>

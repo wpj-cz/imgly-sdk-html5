@@ -1,18 +1,25 @@
 {
   "operations": {
-    "brightness": "Jas",
-    "contrast": "Kontrast",
-    "filters": "Filtry",
-    "flip": "Překlopení",
-    "frames": "Rámeček",
-    "radial-blur": "Rozmazání",
-    "rotation": "Rotace",
-    "saturation": "Sytost",
-    "stickers": "Stickers",
-    "text": "Text",
-    "tilt-shift": "Tilt-Shift",
-    "crop": "Oříznutí",
-    "brush": "Štětec"
+    "brightness": {"label":"Jas"},
+    "contrast": {"label":"Kontrast"},
+    "filters": {"label":"Filtry"},
+    "flip": {"label":"Překlopení"},
+    "frames": {"label":"Rámeček"},
+    "radial-blur": {"label":"Rozmazání"},
+    "rotation": {"label":"Rotace"},
+    "saturation": {"label":"Sytost"},
+    "stickers": {"label":"Stickers"},
+    "text": {"label":"Text"},
+    "tilt-shift": {"label":"Tilt-Shift"},
+    "crop": {"label":"Oříznutí",
+      "children": {
+        "custom": "Volné",
+        "square": "1:1",
+        "4-3": "4:3",
+        "16-9": "16:9"
+      }
+    },
+    "brush": {"label":"Štětec"}
   },
   "top-controls": {
     "new": "New",
