@@ -10,16 +10,17 @@
 .imglykit-container
   .imglykit-top-controls-row
     display: table-row
+    height: 40px
 
   .imglykit-top-controls
     @include user-select(none)
-    display: table-cell
+    display: flex
+    justify-content: space-between
     width: 100%
     height: $topControlsHeight
     color: white
-    font-family: Helvetica, Arial, sans-serif
-    font-size: 16px
-    padding: 0 20px
+    font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif
+    font-size: 14px
     z-index: 2
     background: $controlsBackgroundColor
     > * *
@@ -31,15 +32,11 @@
     &.imglykit-header-padding
       top: $headerHeight
 
-  .imglykit-top-controls-left, .imglykit-top-controls-right
-    padding-top: 5px
-
-  .imglykit-top-controls-left
-    float: left
-
   .imglykit-top-controls-right
-    float: right
     display: none
+    padding-right: 20px
+    padding-top: 5px
+    padding-bottom: 5px
 
     .imglykit-zoom-in, .imglykit-zoom-out
       padding: 0 15px
@@ -59,23 +56,16 @@
       @include opacity(0.4)
       padding: 0 10px
 
-  .imglykit-undo
-    cursor: pointer
-    border-right: 1px solid $borderColor
-    color: rgba(white, 0.4)
-    padding: 0 10px
-    display: none
-    img
-      @include opacity(0.4)
-      margin-right: 5px
-      vertical-align: middle
-
-  .imglykit-export
-    cursor: pointer
-    border-right: 1px solid $borderColor
-    color: rgba(white, 0.4)
-    padding: 0 10px
-    display: none
+  .imglykit-top-controls-left
+    >div
+       cursor: pointer
+       border-right: 1px solid $borderColor
+       color: rgba(white, 0.4)
+       padding: 5px 10px
+       display: none
+       float: left
+    >div:hover
+      background-color: #383b44
     img
       @include opacity(0.4)
       margin-right: 5px

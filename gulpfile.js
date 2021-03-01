@@ -84,6 +84,17 @@ gulp.task('copy', function () {
 })
 
 /**
+ * `gulp copy`
+ * Copies the static assets files to the build folder
+ */
+gulp.task('copy-to-engine', function () {
+   return gulp.src('./build/**')
+      .pipe($.plumber())
+      .pipe(gulp.dest('../../engine/admin/static/imglyKit/'))
+      .pipe($.if(!isProduction, reload({ stream: true, once: true })))
+})
+
+/**
  * `gulp uglify:js`
  * Uglifies the compiled JS files
  */
@@ -254,8 +265,9 @@ gulp.task('release', function () {
     'build:copy',
     'build:js',
     'build:css',
-    'uglify:js',
-    'uglify:css'
+    //'uglify:js',
+    //'uglify:css',
+    'copy-to-engine',
   )
 })
 
