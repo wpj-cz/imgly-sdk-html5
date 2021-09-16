@@ -38,7 +38,7 @@ gulp.task('set-production', function () {
  * Cleans the build directory
  */
 gulp.task('clean', function () {
-  return gulp.src('./build').pipe($.clean())
+  return gulp.src('./build/*').pipe($.clean())
 })
 
 /**
@@ -267,7 +267,7 @@ gulp.task('release', function () {
     'build:css',
     //'uglify:js',
     //'uglify:css',
-    'copy-to-engine',
+    // 'copy-to-engine',
   )
 })
 

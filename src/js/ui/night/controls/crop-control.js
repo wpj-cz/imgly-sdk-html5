@@ -70,6 +70,8 @@ class CropControl extends Control {
     this.addRatio('square', '1')
     this.addRatio('4-3', '1.33')
     this.addRatio('16-9', '1.77')
+    this.addRatio('3-4', '0.75')
+    this.addRatio('9-16', '0.5625')
   }
 
   /**
